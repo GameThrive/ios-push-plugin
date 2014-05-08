@@ -1,7 +1,7 @@
-GameThrive iOS-Push-Plugin
+GameThrive iOS Push Notification Plugin
 ===============
 
-GameThrive Push Notification SDK for iOS
+GameThrive is a free push notification service for mobile apps. This plugin makes it easy to integrate your native iOS app with GameThrive.
 
-See http://docs.gamethrive.com/article/6-ios-sdk for instructions on setting it up with your app.
+See http://docs.gamethrive.com/article/6-ios-sdk for documentation.
 
