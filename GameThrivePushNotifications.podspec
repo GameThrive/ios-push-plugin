@@ -11,6 +11,6 @@ Pod::Spec.new do |s|
   s.platform     = :ios
   s.requires_arc = true
   
-  s.ios.vendored_frameworks = 'GameThrive.framework'
+  s.ios.vendored_frameworks = 'iOS_SDK/Framework/GameThrive.framework'
   s.xcconfig                = { 'OTHER_LDFLAGS' => '-ObjC' }
 end
