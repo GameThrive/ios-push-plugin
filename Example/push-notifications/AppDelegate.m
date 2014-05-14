@@ -23,12 +23,6 @@
 @implementation AppDelegate
 @synthesize gameThrive = _gameThrive;
 
-- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    self.gameThrive = [[GameThrive alloc] init];
-    
-    return YES;
-}
-
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
     [self.gameThrive registerDeviceToken:deviceToken onSuccess:^(NSDictionary* results) {
         NSLog(@"Device Registered with GameThrive.");
@@ -41,9 +35,23 @@
     NSLog(@"Error in registration. Error: %@", err);
 }
 
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    self.gameThrive = [[GameThrive alloc] init];
+    
+    NSDictionary* userInfo = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+    if (userInfo)
+        [self processNotificationOpened:userInfo isActive:false];
+    
+    return YES;
+}
+
 - (void)application:(UIApplication*)application didReceiveRemoteNotification:(NSDictionary*)userInfo {
+    [self processNotificationOpened:userInfo isActive:[application applicationState] == UIApplicationStateActive];
+}
+
+- (void)processNotificationOpened:(NSDictionary*) messageData isActive:(bool)isActive {
     // notificationOpened must be called here. Everything else below is optional in your game.
-    [self.gameThrive notificationOpened:userInfo];
+    [self.gameThrive notificationOpened:messageData];
     
     NSString* message = [self.gameThrive getMessageString];
     NSDictionary* additionalData = [self.gameThrive getAdditionalData];
@@ -63,19 +71,19 @@
             messageTitle = @"Other Extra Data";
         
         alertView = [[UIAlertView alloc] initWithTitle:messageTitle
-                                            message:message
-                                            delegate:self
-                                            cancelButtonTitle:@"Close"
-                                            otherButtonTitles:@"Show", nil];
+                                               message:message
+                                              delegate:self
+                                     cancelButtonTitle:@"Close"
+                                     otherButtonTitles:@"Show", nil];
     }
     
     // If a push notification is received when the app is being used it does not go to the notifiction center so display in your app.
-    if (alertView == nil && [application applicationState] == UIApplicationStateActive) {
+    if (alertView == nil && isActive) {
         alertView = [[UIAlertView alloc] initWithTitle:@"GameThrive Message"
-                                        message:message
-                                        delegate:self
-                                        cancelButtonTitle:@"Close"
-                                        otherButtonTitles:@"Show", nil];
+                                               message:message
+                                              delegate:self
+                                     cancelButtonTitle:@"Close"
+                                     otherButtonTitles:@"Show", nil];
     }
     
     // Add your game logic around this so the user is not interrupted during gameplay.
