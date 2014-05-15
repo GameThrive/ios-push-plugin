@@ -24,15 +24,16 @@
 @synthesize gameThrive = _gameThrive;
 
 - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
+    NSLog(@"Device Registered with Apple.");
     [self.gameThrive registerDeviceToken:deviceToken onSuccess:^(NSDictionary* results) {
         NSLog(@"Device Registered with GameThrive.");
     } onFailure:^(NSError* error) {
-        NSLog(@"Device Registion Error with GameThrive: %@", error);
+        NSLog(@"Error in GameThrive Registration: %@", error);
     }];
 }
 
 - (void)application:(UIApplication*)app didFailToRegisterForRemoteNotificationsWithError:(NSError*)err {
-    NSLog(@"Error in registration. Error: %@", err);
+    NSLog(@"Error in Apple registration. Error: %@", err);
 }
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {

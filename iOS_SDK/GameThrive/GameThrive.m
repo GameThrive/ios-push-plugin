@@ -53,12 +53,30 @@ static GameThrive *defaultClient = nil;
 @synthesize lastMessageReceived;
 
 NSMutableDictionary* tagsToSend;
-NSString* deviceToken;
+
+NSString* mDeviceToken;
+GTResultSuccessBlock tokenUpdateSuccessBlock;
+GTFailureBlock tokenUpdateFailureBlock;
+
+
+bool registeredWithApple = false;
 
 - (id)init {
+    return [self init:nil autoRegister:true];
+}
+
+- (id)init:(BOOL)autoRegister {
+    return [self init:nil autoRegister:autoRegister];
+}
+
+- (id)init:(NSString*)appId autoRegister:(BOOL)autoRegister {
     self = [super init];
     if (self) {
-        self.app_id = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GameThrive_APPID"];
+        if (appId)
+            self.app_id = appId;
+        else
+            self.app_id = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GameThrive_APPID"];
+        
         NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@", DEFAULT_PUSH_HOST]];
         self.httpClient = [[GTHTTPClient alloc] initWithBaseURL:url];
 //#if TARGET_OS_MAC
@@ -94,10 +112,15 @@ NSString* deviceToken;
             [defaults synchronize];
         }
         
+        registeredWithApple = [[NSUserDefaults standardUserDefaults] boolForKey:@"GT_REGISTERED_WITH_APPLE"];
+        
         // Register this device with Apple's APNS server.
         // Calls didRegisterForRemoteNotificationsWithDeviceToken in AppDelegate.m in their app,
         // which in turns calls back into our SDK via the registerDeviceToken method.
-        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert];
+        if (autoRegister || registeredWithApple)
+            [self registerForPushNotifications];
+        
+        [self registerPlayer];
     }
     
     [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
@@ -107,21 +130,56 @@ NSString* deviceToken;
 
 - (void)registerDeviceToken:(id)inDeviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
     NSString* deviceToken = [[inDeviceToken description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
-    deviceToken = [[deviceToken componentsSeparatedByString:@" "] componentsJoinedByString:@""];
     
+    [self updateDeviceToken:[[deviceToken componentsSeparatedByString:@" "] componentsJoinedByString:@""] onSuccess:successBlock onFailure:failureBlock];
+    
+    if (!registeredWithApple) {
+        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setObject:@(YES) forKey:@"GT_REGISTERED_WITH_APPLE"];
+        [defaults synchronize];
+    }
+}
+
+- (void)registerForPushNotifications {
+    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert];
+}
+
+- (void)updateDeviceToken:(NSString*)deviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    NSString* playerId = [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
+    if (playerId == nil) {
+        mDeviceToken = deviceToken;
+        tokenUpdateSuccessBlock = successBlock;
+        tokenUpdateFailureBlock = failureBlock;
+        return;
+    }
+    
+    NSMutableURLRequest* request;
+    request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", playerId]  parameters:nil];
+    
+    NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
+                             self.app_id, @"app_id",
+                             deviceToken, @"identifier",
+                             nil];
+    
+    NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
+    [request setHTTPBody:postData];
+    
+    [self enqueueRequest:request onSuccess:successBlock onFailure:failureBlock];
+}
+
+- (void)registerPlayer {
     NSString* playerId = [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
     
-    NSMutableURLRequest *request;
+    NSMutableURLRequest* request;
     if (playerId == nil)
         request = [self.httpClient requestWithMethod:@"POST" path:@"players" parameters:nil];
     else
         request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_session", playerId]  parameters:nil];
     
-    NSDictionary *infoDictionary = [[NSBundle mainBundle]infoDictionary];
-    NSString *build = infoDictionary[(NSString*)kCFBundleVersionKey];
+    NSDictionary* infoDictionary = [[NSBundle mainBundle]infoDictionary];
+    NSString* build = infoDictionary[(NSString*)kCFBundleVersionKey];
     
-    NSDictionary *dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
-                             deviceToken, @"identifier",
+    NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                              self.app_id, @"app_id",
                              self.deviceModel, @"device_model",
                              self.systemVersion, @"device_os",
@@ -131,22 +189,24 @@ NSString* deviceToken;
                              [NSNumber numberWithInt:0], @"device_type",
                              nil];
     
-    NSData *postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
+    NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
     [request setHTTPBody:postData];
     
-    [self enqueueRequest:request onSuccess:^(NSDictionary *results) {
+    [self enqueueRequest:request onSuccess:^(NSDictionary* results) {
         if ([results objectForKey:@"id"] != nil) {
             NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
             [defaults setObject:[results objectForKey:@"id"] forKey:@"GT_PLAYER_ID"];
             [defaults synchronize];
+            
+            if (mDeviceToken)
+                [self updateDeviceToken:mDeviceToken onSuccess:tokenUpdateSuccessBlock onFailure:tokenUpdateFailureBlock];
             
             if (tagsToSend != nil) {
                 [self sendTags:tagsToSend];
                 tagsToSend = nil;
             }
         }
-        successBlock(results);
-    } onFailure:failureBlock];
+    } onFailure:nil];
 }
 
 - (NSString*)getPlayerId {
@@ -154,7 +214,7 @@ NSString* deviceToken;
 }
 
 - (NSString*)getDeviceToken {
-    return deviceToken;
+    return mDeviceToken;
 }
 
 - (void)sendTags:(NSDictionary*)keyValuePair {

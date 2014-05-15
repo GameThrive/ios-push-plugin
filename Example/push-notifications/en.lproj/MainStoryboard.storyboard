@@ -30,7 +30,7 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
-                                    <action selector="sendPurchase:" destination="2" eventType="touchUpInside" id="kxa-xA-oyE"/>
+                                    <action selector="sendPurchase:" destination="4" eventType="touchUpInside" id="GK2-mK-Tbb"/>
                                 </connections>
                             </button>
                         </subviews>

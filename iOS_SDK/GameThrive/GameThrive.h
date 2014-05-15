@@ -56,6 +56,13 @@ typedef void (^GTFailureBlock)(NSError* error);
  */
 - (id)init;
 
+- (id)init:(BOOL)autoRegister;
+
+- (id)init:(NSString*)appId autoRegister:(BOOL)autoRegister;
+
+- (void)registerForPushNotifications;
+
+
 + (void)setDefaultClient:(GameThrive*)client;
 + (GameThrive*)defaultClient;
 
