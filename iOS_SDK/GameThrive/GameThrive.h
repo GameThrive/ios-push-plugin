@@ -62,6 +62,8 @@ typedef void (^GTFailureBlock)(NSError* error);
 
 - (void)registerForPushNotifications;
 
+- (void)onFocus:(NSString*)state;
+
 
 + (void)setDefaultClient:(GameThrive*)client;
 + (GameThrive*)defaultClient;
@@ -73,6 +75,15 @@ typedef void (^GTFailureBlock)(NSError* error);
 
 - (void)sendTags:(NSDictionary*)keyValuePair onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock;
 - (void)sendTags:(NSDictionary*)keyValuePair;
+
+- (void)getTags:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock;
+- (void)getTags:(GTResultSuccessBlock)successBlock;
+
+- (void)deleteTag:(NSString*)key onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock;
+- (void)deleteTag:(NSString*)key;
+
+- (void)deleteTags:(NSArray*)keys onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock;
+- (void)deleteTags:(NSArray*)keys;
 
 - (void)sendPurchase:(NSNumber*)amount onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock;
 - (void)sendPurchase:(NSNumber*)amount;

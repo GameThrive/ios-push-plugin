@@ -34,7 +34,7 @@
 
 #define DEFAULT_PUSH_HOST @"https://gamethrive.com/api/v1/"
 
-static GameThrive *defaultClient = nil;
+static GameThrive* defaultClient = nil;
 
 @interface GameThrive ()
 
@@ -57,9 +57,14 @@ NSMutableDictionary* tagsToSend;
 NSString* mDeviceToken;
 GTResultSuccessBlock tokenUpdateSuccessBlock;
 GTFailureBlock tokenUpdateFailureBlock;
+NSString* mPlayerId;
+
+UIBackgroundTaskIdentifier focusBackgroundTask;
 
 
 bool registeredWithApple = false;
+bool gameThriveReg = false;
+NSNumber* lastTrackedTime;
 
 - (id)init {
     return [self init:nil autoRegister:true];
@@ -72,6 +77,8 @@ bool registeredWithApple = false;
 - (id)init:(NSString*)appId autoRegister:(BOOL)autoRegister {
     self = [super init];
     if (self) {
+        lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
+        
         if (appId)
             self.app_id = appId;
         else
@@ -105,12 +112,14 @@ bool registeredWithApple = false;
             [GameThrive setDefaultClient:self];
         
         // Handle changes to the app id. This might happen on a developer's device when testing.
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
         if (![self.app_id isEqualToString:[defaults stringForKey:@"GT_APP_ID"]]) {
             [defaults setObject:self.app_id forKey:@"GT_APP_ID"];
             [defaults setObject:nil forKey:@"GT_PLAYER_ID"];
             [defaults synchronize];
         }
+        
+        mPlayerId = [defaults stringForKey:@"GT_PLAYER_ID"];
         
         registeredWithApple = [[NSUserDefaults standardUserDefaults] boolForKey:@"GT_REGISTERED_WITH_APPLE"];
         
@@ -120,7 +129,10 @@ bool registeredWithApple = false;
         if (autoRegister || registeredWithApple)
             [self registerForPushNotifications];
         
-        [self registerPlayer];
+        if (mPlayerId != nil)
+            [self registerPlayer];
+        else // Fall back incase Apple does not responsed in time.
+            [self performSelector:@selector(registerPlayer) withObject:nil afterDelay:30.0f];
     }
     
     [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
@@ -145,16 +157,17 @@ bool registeredWithApple = false;
 }
 
 - (void)updateDeviceToken:(NSString*)deviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
-    NSString* playerId = [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
-    if (playerId == nil) {
+    if (mPlayerId == nil) {
         mDeviceToken = deviceToken;
         tokenUpdateSuccessBlock = successBlock;
         tokenUpdateFailureBlock = failureBlock;
+        
+        [self registerPlayer];
         return;
     }
     
     NSMutableURLRequest* request;
-    request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", playerId]  parameters:nil];
+    request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", mPlayerId]  parameters:nil];
     
     NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                              self.app_id, @"app_id",
@@ -167,14 +180,34 @@ bool registeredWithApple = false;
     [self enqueueRequest:request onSuccess:successBlock onFailure:failureBlock];
 }
 
+
+- (NSArray*)getSoundFiles {
+    NSFileManager* fm = [NSFileManager defaultManager];
+    NSError* error = nil;
+    
+    NSArray* allFiles = [fm contentsOfDirectoryAtPath:[[NSBundle mainBundle] resourcePath] error:&error];
+    NSMutableArray* soundFiles = [NSMutableArray new];
+    if (error == nil) {
+        for(id file in allFiles) {
+            if ([file hasSuffix:@".wav"] || [file hasSuffix:@".mp3"])
+                [soundFiles addObject:file];
+        }
+    }
+    
+    return soundFiles;
+}
+
 - (void)registerPlayer {
-    NSString* playerId = [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
+    if (gameThriveReg)
+        return;
+    
+    gameThriveReg = true;
     
     NSMutableURLRequest* request;
-    if (playerId == nil)
+    if (mPlayerId == nil)
         request = [self.httpClient requestWithMethod:@"POST" path:@"players" parameters:nil];
     else
-        request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_session", playerId]  parameters:nil];
+        request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_session", mPlayerId]  parameters:nil];
     
     NSDictionary* infoDictionary = [[NSBundle mainBundle]infoDictionary];
     NSString* build = infoDictionary[(NSString*)kCFBundleVersionKey];
@@ -187,6 +220,10 @@ bool registeredWithApple = false;
                              [NSNumber numberWithInt:(int)[[NSTimeZone localTimeZone] secondsFromGMT]], @"timezone",
                              build, @"game_version",
                              [NSNumber numberWithInt:0], @"device_type",
+                             [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
+                             [self getSoundFiles], @"sounds",
+                             @"iOS 1.2.2", @"sdk",
+                             mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
     NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
@@ -194,8 +231,9 @@ bool registeredWithApple = false;
     
     [self enqueueRequest:request onSuccess:^(NSDictionary* results) {
         if ([results objectForKey:@"id"] != nil) {
-            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            [defaults setObject:[results objectForKey:@"id"] forKey:@"GT_PLAYER_ID"];
+            NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+            mPlayerId = [results objectForKey:@"id"];
+            [defaults setObject:mPlayerId forKey:@"GT_PLAYER_ID"];
             [defaults synchronize];
             
             if (mDeviceToken)
@@ -210,7 +248,7 @@ bool registeredWithApple = false;
 }
 
 - (NSString*)getPlayerId {
-    return [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
+    return mPlayerId;
 }
 
 - (NSString*)getDeviceToken {
@@ -222,9 +260,7 @@ bool registeredWithApple = false;
 }
 
 - (void)sendTags:(NSDictionary*)keyValuePair onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
-    NSString* playerId = [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
-    
-    if (playerId == nil) {
+    if (mPlayerId == nil) {
         if (tagsToSend == nil)
             tagsToSend = [keyValuePair mutableCopy];
         else
@@ -232,14 +268,14 @@ bool registeredWithApple = false;
         return;
     }
     
-    NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", playerId]  parameters:nil];
+    NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", mPlayerId]  parameters:nil];
     
-    NSDictionary *dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
+    NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                              self.app_id, @"app_id",
                              keyValuePair, @"tags",
                              nil];
     
-    NSData *postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
+    NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
     [request setHTTPBody:postData];
     
     [self enqueueRequest:request
@@ -255,10 +291,101 @@ bool registeredWithApple = false;
     [self sendTags:[NSDictionary dictionaryWithObjectsAndKeys: value, key, nil] onSuccess:successBlock onFailure:failureBlock];
 }
 
-- (void)sendPurchase:(NSNumber*)amount onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
-    NSString* playerId = [[NSUserDefaults standardUserDefaults] stringForKey:@"GT_PLAYER_ID"];
+- (void)getTags:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    NSMutableURLRequest* request;
+    request = [self.httpClient requestWithMethod:@"GET" path:[NSString stringWithFormat:@"players/%@", mPlayerId]  parameters:nil];
     
-    NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_purchase", playerId]  parameters:nil];
+    [self enqueueRequest:request onSuccess:^(NSDictionary* results) {
+        if ([results objectForKey:@"tags"] != nil)
+            successBlock([results objectForKey:@"tags"]);
+    } onFailure:failureBlock];
+}
+
+- (void)getTags:(GTResultSuccessBlock)successBlock {
+    [self getTags:successBlock onFailure:nil];
+}
+
+
+- (void)deleteTag:(NSString*)key onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    [self deleteTags:@[key] onSuccess:successBlock onFailure:failureBlock];
+}
+
+- (void)deleteTag:(NSString*)key {
+    [self deleteTags:@[key] onSuccess:nil onFailure:nil];
+}
+
+- (void)deleteTags:(NSArray*)keys onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    NSMutableURLRequest* request;
+    request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", mPlayerId]  parameters:nil];
+    
+    NSMutableDictionary* deleteTagsDict = [NSMutableDictionary dictionary];
+    for(id key in keys)
+        [deleteTagsDict setObject:@"" forKey:key];
+    
+    NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
+                             self.app_id, @"app_id",
+                             deleteTagsDict, @"tags",
+                             nil];
+    
+    NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
+    [request setHTTPBody:postData];
+    
+    [self enqueueRequest:request onSuccess:successBlock onFailure:failureBlock];
+}
+
+- (void)deleteTags:(NSArray*)keys {
+    [self deleteTags:keys onSuccess:nil onFailure:nil];
+}
+
+
+- (void) beginBackgroundFocusTask {
+    focusBackgroundTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        [self endBackgroundFocusTask];
+    }];
+}
+
+- (void) endBackgroundFocusTask {
+    [[UIApplication sharedApplication] endBackgroundTask: focusBackgroundTask];
+    focusBackgroundTask = UIBackgroundTaskInvalid;
+}
+
+- (void)onFocus:(NSString*)state {
+    if ([state isEqualToString:@"resume"]) {
+        lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
+        return;
+    }
+    
+    if (mPlayerId == nil)
+        return;
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self beginBackgroundFocusTask];
+        
+        NSNumber* timeElapsed = @(([[NSDate date] timeIntervalSince1970] - [lastTrackedTime longLongValue]) + 0.5);
+        timeElapsed = [NSNumber numberWithLongLong: [timeElapsed longLongValue]];
+        lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
+        
+        NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_focus", mPlayerId]  parameters:nil];
+        NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
+                                 self.app_id, @"app_id",
+                                 @"ping", @"state",
+                                 timeElapsed, @"active_time",
+                                 nil];
+        
+        NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
+        [request setHTTPBody:postData];
+        
+        [self enqueueRequest:request
+                   onSuccess:nil
+                   onFailure:nil
+               isSynchronous:true];
+        
+        [self endBackgroundFocusTask];
+    });
+}
+
+- (void)sendPurchase:(NSNumber*)amount onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_purchase", mPlayerId]  parameters:nil];
     
     NSDictionary *dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                              self.app_id, @"app_id",
@@ -284,6 +411,7 @@ bool registeredWithApple = false;
     
     NSDictionary *dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                              self.app_id, @"app_id",
+                             mPlayerId, @"player_id",
                              @(YES), @"opened",
                              nil];
     
@@ -313,15 +441,22 @@ bool registeredWithApple = false;
     return [[self.lastMessageReceived objectForKey:@"aps"] objectForKey:@"alert"];
 }
 
-- (void)enqueueRequest:(NSURLRequest *)request onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
-    AFJSONRequestOperation *op = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *urlRequest, NSHTTPURLResponse *response, id JSON) {
+- (void)enqueueRequest:(NSURLRequest*)request onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    [self enqueueRequest:request onSuccess:successBlock onFailure:failureBlock isSynchronous:false];
+}
+
+- (void)enqueueRequest:(NSURLRequest*)request onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock isSynchronous:(BOOL)isSynchronous {
+    AFJSONRequestOperation* op = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *urlRequest, NSHTTPURLResponse *response, id JSON) {
         if (successBlock != nil)
             successBlock(JSON);
     }failure:^(NSURLRequest *urlRequest, NSHTTPURLResponse *response, NSError *error, id JSON) {
         if (failureBlock != nil)
             failureBlock([NSError errorWithDomain:@"GTError" code:[response statusCode] userInfo:JSON]);
     }];
-    [self.httpClient enqueueHTTPRequestOperation:op];  
+    [self.httpClient enqueueHTTPRequestOperation:op];
+    
+    if (isSynchronous)
+        [op waitUntilFinished];
 }
 
 

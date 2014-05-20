@@ -36,7 +36,16 @@
     NSLog(@"Error in Apple registration. Error: %@", err);
 }
 
-- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+- (void)applicationWillResignActive:(UIApplication*)application {
+    [self.gameThrive onFocus:@"suspend"];
+}
+
+- (void)applicationDidBecomeActive:(UIApplication*)application {
+    [self.gameThrive onFocus:@"resume"];
+}
+
+
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
     self.gameThrive = [[GameThrive alloc] init];
     
     NSDictionary* userInfo = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
