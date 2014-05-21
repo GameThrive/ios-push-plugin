@@ -18,17 +18,14 @@
  * limitations under the License.
  */
 
-// GameThrive SDK v1.2.0
+// GameThrive SDK v1.2.3
 
 #import <Foundation/Foundation.h>
 
-/** SMResultSuccessBlock
- */
 typedef void (^GTResultSuccessBlock)(NSDictionary* result);
-
-/** SMFailureBlock
- */
 typedef void (^GTFailureBlock)(NSError* error);
+typedef void (^GTIdsAvailableBlock)(NSString* playerId, NSString* pushToken);
+
 
 /**
  An `GameThrive` provides a high level interface to interacting with GameThrive's push service.
@@ -89,6 +86,8 @@ typedef void (^GTFailureBlock)(NSError* error);
 - (void)sendPurchase:(NSNumber*)amount;
 
 - (void)notificationOpened:(NSDictionary*)messageDict;
+
+- (void)IdsAvailable:(GTIdsAvailableBlock)idsAvailableBlock;
 
 - (NSString*)getPlayerId;
 - (NSString*)getDeviceToken;

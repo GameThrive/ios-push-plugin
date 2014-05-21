@@ -59,6 +59,8 @@ GTResultSuccessBlock tokenUpdateSuccessBlock;
 GTFailureBlock tokenUpdateFailureBlock;
 NSString* mPlayerId;
 
+GTIdsAvailableBlock idsAvailableBlockWhenReady;
+
 UIBackgroundTaskIdentifier focusBackgroundTask;
 
 
@@ -120,8 +122,8 @@ NSNumber* lastTrackedTime;
         }
         
         mPlayerId = [defaults stringForKey:@"GT_PLAYER_ID"];
-        
-        registeredWithApple = [[NSUserDefaults standardUserDefaults] boolForKey:@"GT_REGISTERED_WITH_APPLE"];
+        mDeviceToken = [defaults stringForKey:@"GT_DEVICE_TOKEN"];
+        registeredWithApple = mDeviceToken != nil || [defaults boolForKey:@"GT_REGISTERED_WITH_APPLE"];
         
         // Register this device with Apple's APNS server.
         // Calls didRegisterForRemoteNotificationsWithDeviceToken in AppDelegate.m in their app,
@@ -140,23 +142,22 @@ NSNumber* lastTrackedTime;
     return self;
 }
 
+- (void)registerForPushNotifications {
+    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert];
+}
+
 - (void)registerDeviceToken:(id)inDeviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
     NSString* deviceToken = [[inDeviceToken description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
     
     [self updateDeviceToken:[[deviceToken componentsSeparatedByString:@" "] componentsJoinedByString:@""] onSuccess:successBlock onFailure:failureBlock];
     
-    if (!registeredWithApple) {
-        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:@(YES) forKey:@"GT_REGISTERED_WITH_APPLE"];
-        [defaults synchronize];
-    }
-}
-
-- (void)registerForPushNotifications {
-    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert];
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:mDeviceToken forKey:@"GT_DEVICE_TOKEN"];
+    [defaults synchronize];
 }
 
 - (void)updateDeviceToken:(NSString*)deviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    
     if (mPlayerId == nil) {
         mDeviceToken = deviceToken;
         tokenUpdateSuccessBlock = successBlock;
@@ -165,6 +166,13 @@ NSNumber* lastTrackedTime;
         [self registerPlayer];
         return;
     }
+    
+    if ([deviceToken isEqualToString:mDeviceToken]) {
+        successBlock(nil);
+        return;
+    }
+    
+    mDeviceToken = deviceToken;
     
     NSMutableURLRequest* request;
     request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", mPlayerId]  parameters:nil];
@@ -222,7 +230,7 @@ NSNumber* lastTrackedTime;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"iOS 1.2.2", @"sdk",
+                             @"iOS 1.2.3", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -243,8 +251,18 @@ NSNumber* lastTrackedTime;
                 [self sendTags:tagsToSend];
                 tagsToSend = nil;
             }
+            
+            if (idsAvailableBlockWhenReady)
+                idsAvailableBlockWhenReady(mPlayerId, mDeviceToken);
         }
     } onFailure:nil];
+}
+
+- (void)IdsAvailable:(GTIdsAvailableBlock)idsAvailableBlock {
+    if (mPlayerId)
+        idsAvailableBlock(mPlayerId, mDeviceToken);
+    else
+        idsAvailableBlockWhenReady = idsAvailableBlock;
 }
 
 - (NSString*)getPlayerId {
