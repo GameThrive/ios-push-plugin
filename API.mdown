@@ -151,7 +151,7 @@ Call from `didFinishLaunchingWithOptions` if your app started from a push and al
 Call after notificationOpened to get the message text the use sees on their device.
 
 - __Returns__
- - __`NSString*` __ - The message text that was sent to the user.
+ - __`NSString*`__ - The message text that was sent to the user.
  
 - __Example__
 
@@ -349,7 +349,7 @@ Lets you retrieve the GameThrive player id and device token. Your block is calle
    - __Parameters__
      - __`NSString*` _playerId___ - GameThrive playerId is a UUID formatted string.(_unique per device per app_)
      - __`NSString*` _registrationId___ - pushToken is a Apple assigned identifier(_unique per device per app_).
-      - _NOTE:_ Might be `nil` the user does not accept push notifications for your app or there was a connection issue.
+      - _NOTE:_ Might be `nil` if the user does not accept push notifications for your app or there was a connection issue.
    
  
 - __Example__
@@ -361,6 +361,4 @@ Lets you retrieve the GameThrive player id and device token. Your block is calle
 			NSLog(@"pushToken:", pushToken);
 	}];
 	````
-	````
-
 	
