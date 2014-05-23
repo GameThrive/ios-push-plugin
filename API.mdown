@@ -1,0 +1,366 @@
+# GameThrive iOS SDK API
+
+List of Methods
+----------
+- [`init`](#init)
+- [`registerForPushNotifications`](#registerForPushNotifications)
+- [`registerDeviceToken`](#registerDeviceToken)
+- [`notificationOpened`](#notificationOpened)
+- [`getAdditionalData`](#getAdditionalData)
+- [`getMessageString`](#getMessageString)
+- [`sendTag`](#sendTag)
+- [`sendTags`](#sendTags)
+- [`getTags`](#getTags)
+- [`deleteTag`](#deleteTag)
+- [`deleteTags`](#deleteTags)
+- [`sendPurchase`](#sendPurchase)
+- [`idsAvailable`](#idsAvailable)
+- [`onPaused`](#onPaused)
+- [`onResumed`](#onResumed)
+
+List of Block Callbacks
+-----
+- [`GTResultSuccessBlock`](#GTResultSuccessBlock)
+- [`GTFailureBlock`](#GTFailureBlock)
+- [`GTIdsAvailableBlock`](#GTIdsAvailableBlock)
+
+## Methods
+<a name="init" />
+#### init
+Should be called from `didFinishLaunchingWithOptions` in `AppDelegate.m`. Instead of passing in appId here you can also add GameThrive_APPID as a key in your plist file and place your GameThrive app Id as a value there.
+
+- __Parameters__
+ - __`NSString*` _appId___ - Your GameThrive app id found on the settings page at gamethrive.com.
+ - __`BOOL` _autoRegister(Optional)___ -   Default true. Automatically show the iOS system prompt to accept push notifications. If you pass in false to delay this pop-up at a better time then call `registerForPushNotifications` when you want to show the prompt.
+
+- __Example__
+
+	````objective-c
+	- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+		self.gameThrive = [[GameThrive alloc] init];
+	}
+	````
+
+<a name="registerForPushNotifications" />
+#### registerForPushNotifications
+Call when you want to prompt the user to accept push notifications. Only call once and only if you passed false to `init autoRegister:`.
+
+- __Example__
+
+	````objective-c
+	[gameThrive registerForPushNotifications];
+	````
+
+<a name="registerDeviceToken" />
+#### registerDeviceToken
+Call from `didRegisterForRemoteNotificationsWithDeviceToken` in `AppDelegate.m` so the GameThrive library can send the token to the GameThrive server.
+
+- __Parameters__
+ - __`NSData*` _token___ - Token from didRegisterForRemoteNotificationsWithDeviceToken.
+ - __`GTResultSuccessBlock` _onSuccess(Optional)___ -  Call if there were no errors.
+ - __`GTFailureBlock` _onFailure(Optional)___ -  Called if there was an error.
+
+ 
+- __Example__
+
+	````objective-c
+	- (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
+		NSLog(@"Device Registered with Apple.");
+		[self.gameThrive registerDeviceToken:deviceToken onSuccess:^(NSDictionary* results) {
+			NSLog(@"Device Registered with GameThrive.");
+		} onFailure:^(NSError* error) {
+			NSLog(@"Error in GameThrive Registration: %@", error);
+		}];
+	}
+	````
+
+<a name="notificationOpened" />
+#### notificationOpened
+Call from `didFinishLaunchingWithOptions` if your app started from a push and also from `didReceiveRemoteNotification` in `AppDelegate.m`. See example to how to handle both cases.
+
+- __Parameters__
+ - __`NSDictionary*` _messageDict___ - Dictionary that iOS sent to your app from a remote push.
+ 
+- __Example__
+
+	````objective-c
+	- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+		self.gameThrive = [[GameThrive alloc] init];
+		
+		NSDictionary* userInfo = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+		if (userInfo)
+			[self processNotificationOpened:userInfo isActive:false];
+		
+		return YES;
+	}
+
+	- (void)application:(UIApplication*)application didReceiveRemoteNotification:(NSDictionary*)userInfo {
+		[self processNotificationOpened:userInfo isActive:[application applicationState] == UIApplicationStateActive];
+	}
+
+	- (void)processNotificationOpened:(NSDictionary*) messageData isActive:(bool)isActive {
+		// notificationOpened must be called here. Everything else below is optional in your game.
+		[self.gameThrive notificationOpened:messageData];
+		
+		NSString* message = [self.gameThrive getMessageString];
+		NSDictionary* additionalData = [self.gameThrive getAdditionalData];
+		
+		UIAlertView* alertView;
+		
+		if (additionalData != nil) {
+			// Append AdditionalData at the end of the message
+			message = [message stringByAppendingString:[NSString stringWithFormat:@":data:%@", additionalData]];
+			
+			NSString* messageTitle;
+			if ([additionalData objectForKey:@"discount"] != nil)
+				messageTitle = @"Discount!";
+			else if ([additionalData objectForKey:@"bonusCredits"] != nil)
+				messageTitle = @"Bonus Credits!";
+			else
+				messageTitle = @"Other Extra Data";
+			
+			alertView = [[UIAlertView alloc] initWithTitle:messageTitle
+												   message:message
+												  delegate:self
+										 cancelButtonTitle:@"Close"
+										 otherButtonTitles:@"Show", nil];
+		}
+		
+		// If a push notification is received when the app is being used it does not go to the notifiction center so display in your app.
+		if (alertView == nil && isActive) {
+			alertView = [[UIAlertView alloc] initWithTitle:@"GameThrive Message"
+												   message:message
+												  delegate:self
+										 cancelButtonTitle:@"Close"
+										 otherButtonTitles:@"Show", nil];
+		}
+		
+		// Add your game logic around this so the user is not interrupted during gameplay.
+		if (alertView != nil)
+			[alertView show];
+	}
+	````
+
+
+
+
+
+
+<a name="getMessageString" />
+#### getMessageString
+Call after notificationOpened to get the message text the use sees on their device.
+
+- __Returns__
+ - __`NSString*` __ - The message text that was sent to the user.
+ 
+- __Example__
+
+	````objective-c
+	NSDictionary* additionalData = [gameThrive getAdditionalData];
+	````
+
+<a name="getAdditionalData" />
+#### getAdditionalData
+Call after notificationOpened to get any additionalData that was sent with the notification.
+
+- __Returns__
+ - __`NSDictionary*` __ - Key value pairs that were sent with the message.
+ 
+- __Example__
+
+	````objective-c
+	NSString* message = [self.gameThrive getMessageString];
+	````
+
+<a name="sendTag" />
+#### sendTag
+Tag a player based on a game event of your choosing so later you can create segments on [gamethrive.com](https://gamethrive.com) to target these players. Recommend using sendTags over sendTag if you need to set more than one tag on a player at a time.
+
+- __Parameters__
+ - __`NSString*` _key___ - Key of your choosing to create or update.
+ - __`NSString*` _value___ -  Value to set on the key.
+   - _NOTE:_ Passing in a blank String deletes the key, you can also call deleteTag or deleteTags.
+ - __`GTResultSuccessBlock` _onSuccess(Optional)___ -  Call if there were no errors sending the tag.
+ - __`GTFailureBlock` _onFailure(Optional)___ -  Called if there was an error.
+
+
+- __Example__
+
+	````objective-c
+	[gameThrive sendTag:@"key" value:@"value"];
+	````
+
+<a name="sendTags" />
+#### sendTags
+Tag a player based on a game event of your choosing so later you can create segments on [gamethrive.com](https://gamethrive.com) to target these players.
+
+- __Parameters__
+ - __`NSDictionary*` _keyValues___ - Key value pairs of your choosing to create or update.
+   - _NOTE:_ Passing in a blank `NSString*` as a value deletes the key, you can also call `deleteTag` or `deleteTags`.
+ - __`GTResultSuccessBlock` _onSuccess(Optional)___ -  Call if there were no errors sending the tag.
+ - __`GTFailureBlock` _onFailure(Optional)___ -  Called if there was an error.
+
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive sendTags:(@{@"key1" : @"value1", @"key2" : "value2"}];
+	````
+
+<a name="getTags" />
+#### getTags
+Retrieve a list of tags that have been set on the player from the GameThrive server.
+
+- __Parameters__
+ - __`GTResultSuccessBlock` _successBlock___ - Called when tags are received from GameThrive's server.
+ - __`GTFailureBlock` _onFailure(Optional)___ -  Called if there was an error.
+
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive getTags:^(NSDictionary* result) {
+		NSLog(@"%@", result);
+	}];
+	````
+
+<a name="deleteTag" />
+#### deleteTag
+Deletes a tag that was previously set on a player with `sendTag` or `sendTags`. Use `deleteTags` if you need to delete more than one.
+
+- __Parameters__
+ - __`NSString*` _key___ - Key to remove.
+ - __`GTResultSuccessBlock` _onSuccess(Optional)___ -  Call if there were no errors.
+ - __`GTFailureBlock` _onFailure(Optional)___ -  Called if there was an error.
+   
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive deleteTag:@"key"];
+	````
+
+<a name="deleteTags" />
+#### deleteTags
+Deletes tags that were previously set on a player with `sendTag` or `sendTags`.
+
+- __Parameters__
+ - __`NSArray*` _keys___ - Keys to remove.
+ - __`GTResultSuccessBlock` _onSuccess(Optional)___ -  Call if there were no errors.
+ - __`GTFailureBlock` _onFailure(Optional)___ -  Called if there was an error.
+   
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive sendTags:@[@"key1", @"key2"]];
+	````
+
+<a name="sendPurchase" />
+#### sendPurchase
+Call this method when a user completes an in-app purchase, and provide the amount spent in USD. This can later be used to target free vs paid users when sending a push notification.
+
+- __Parameters__
+ - __NSNumber* _amount___ - Amount spent in USD.
+   
+- __Example__
+
+	````objective-c
+	[gameThrive sendPurchase:[NSNumber numberWithDouble:12.34]];
+	````
+
+
+<a name="IdsAvailable" />
+#### IdsAvailable
+Lets you retrieve the GameThrive player id and push token. Your callback block is called after the device is successfully registered with GameThrive. pushToken will be nil if the user did not accept push notifications.
+
+- __Parameters__
+ - __`GTIdsAvailableBlock`  _idsAvailableBlock___ -  Called when the player id is available.
+
+- __Example__
+
+	````objective-c
+	[gameThrive IdsAvailable:^(NSString* playerId, NSString* pushToken) {
+		NSLog(@"PlayerId:%@", playerId);
+		if (pushToken != nil)
+			NSLog(@"pushToken:", pushToken);
+	}];
+	````
+
+
+<a name="onFocus" />
+#### onFocus
+Used to tell GameThrive how much time the user has spent in your app so you can later segment on this. Must call from `applicationWillResignActive` passing in @"suspend" and call from `applicationDidBecomeActive` passing in @"resume"
+
+- __Parameters__
+ - __`NSString*`  _state___ -  Pass in suspend or resume.
+
+- __Example__
+
+	````objective-c
+	- (void)applicationWillResignActive:(UIApplication*)application {
+		[self.gameThrive onFocus:@"suspend"];
+	}
+
+	- (void)applicationDidBecomeActive:(UIApplication*)application {
+		[self.gameThrive onFocus:@"resume"];
+	}
+	````
+
+## Block Callbacks
+
+<a name="GTResultSuccessBlock" />
+#### GTResultSuccessBlock
+Block for GameThrive methods that gets called when the GameThrive server is contacted successfully.
+
+   -  __Parameters__
+     - __`NSDictionary` _result___ - The resulting JSON response from the GameThrive server.
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive getTags:^(NSDictionary* result) {
+		NSLog(@"%@", result);
+	}];
+	````
+
+<a name="GTFailureBlock" />
+#### GTFailureBlock
+Block for GameThrive methods that gets called when the GameThrive server can't be contacted or there was a error in the response.
+
+   - __Parameters__
+     - __`NSError*` _error___ - errorWithDomain == "GTError", code  == HTTP error code from the GameThrive server, userInfo == JSON GameThrive responded with.
+   
+ 
+- __Example__
+
+	````objective-c
+	[self.gameThrive registerDeviceToken:deviceToken onSuccess:^(NSDictionary* results) {
+		NSLog(@"Device Registered with GameThrive.");
+	} onFailure:^(NSError* error) {
+		NSLog(@"Error in GameThrive Registration: %@", error);
+	}];
+	````
+
+<a name="GTIdsAvailableBlock" />
+#### GTIdsAvailableBlock
+Lets you retrieve the GameThrive player id and device token. Your block is called after the device is successfully registered with GameThrive.
+
+   - __Parameters__
+     - __`NSString*` _playerId___ - GameThrive playerId is a UUID formatted string.(_unique per device per app_)
+     - __`NSString*` _registrationId___ - pushToken is a Apple assigned identifier(_unique per device per app_).
+      - _NOTE:_ Might be `nil` the user does not accept push notifications for your app or there was a connection issue.
+   
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive IdsAvailable:^(NSString* playerId, NSString* pushToken) {
+		NSLog(@"PlayerId:%@", playerId);
+		if (pushToken != nil)
+			NSLog(@"pushToken:", pushToken);
+	}];
+	````
+	````
+
+	
