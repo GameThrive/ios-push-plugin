@@ -21,16 +21,25 @@
 #import "GTHTTPClient.h"
 
 @interface GTHTTPClient()
-
+@property (readwrite, nonatomic) NSURL *baseURL;
 @end
 
 @implementation GTHTTPClient
 
-- (NSMutableURLRequest*) requestWithMethod:(NSString*)method
-                                       path:(NSString*)path
-                                 parameters:(NSDictionary *)parameters {
+@synthesize baseURL = _baseURL;
+
+- (id)initWithBaseURL:(NSURL *)url {
+    self = [super init];
+    self.baseURL = url;
     
-    NSMutableURLRequest *request = [super requestWithMethod:method path:path parameters:parameters];
+    return self;
+}
+
+- (NSMutableURLRequest*) requestWithMethod:(NSString*)method
+                                       path:(NSString*)path {
+    NSURL* url = [NSURL URLWithString:path relativeToURL:self.baseURL];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+    [request setHTTPMethod:method];
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
     

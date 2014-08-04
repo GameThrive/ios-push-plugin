@@ -18,9 +18,12 @@
  * limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import "AFHTTPClient.h"
+@interface GTHTTPClient : NSObject
 
-@interface GTHTTPClient : AFHTTPClient
+@property (readonly, nonatomic) NSURL *baseURL;
 
+- (id)initWithBaseURL:(NSURL *)url;
+
+- (NSMutableURLRequest*) requestWithMethod:(NSString*)method
+                                      path:(NSString*)path;
 @end
