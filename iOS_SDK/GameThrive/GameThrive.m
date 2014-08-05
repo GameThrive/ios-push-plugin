@@ -116,7 +116,7 @@ NSNumber* lastTrackedTime;
             [self performSelector:@selector(registerPlayer) withObject:nil afterDelay:30.0f];
     }
     
-    [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+    clearBadgeCount();
     
     return self;
 }
@@ -209,7 +209,7 @@ NSNumber* lastTrackedTime;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"iOS 1.3.0", @"sdk",
+                             @"iOS 1.3.1", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -349,38 +349,59 @@ NSNumber* lastTrackedTime;
 }
 
 - (void)onFocus:(NSString*)state {
+    bool wasBadgeSet = false;
+    
     if ([state isEqualToString:@"resume"]) {
         lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
-        return;
+        wasBadgeSet = clearBadgeCount();
     }
     
     if (mPlayerId == nil)
         return;
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self beginBackgroundFocusTask];
+    // If resuming and badge was set, clear it on the server as well.
+    if (wasBadgeSet && [state isEqualToString:@"resume"]) {
+        NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"PUT" path:[NSString stringWithFormat:@"players/%@", mPlayerId]];
         
-        NSNumber* timeElapsed = @(([[NSDate date] timeIntervalSince1970] - [lastTrackedTime longLongValue]) + 0.5);
-        timeElapsed = [NSNumber numberWithLongLong: [timeElapsed longLongValue]];
-        lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
-        
-        NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_focus", mPlayerId]];
         NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                                  self.app_id, @"app_id",
-                                 @"ping", @"state",
-                                 timeElapsed, @"active_time",
+                                 @0, @"badge_count",
                                  nil];
         
         NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
         [request setHTTPBody:postData];
         
-        // We are already running in a thread so send the request synchronous to keep the thread alive.
-        [self enqueueRequest:request
-                   onSuccess:nil
-                   onFailure:nil
-               isSynchronous:true];
-        [self endBackgroundFocusTask];
-    });
+        [self enqueueRequest:request onSuccess:nil onFailure:nil];
+        return;
+    }
+    
+    // Update the playtime on the server when the app put into the background or the device goes to sleep mode.
+    if ([state isEqualToString:@"suspend"]) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            [self beginBackgroundFocusTask];
+        
+            NSNumber* timeElapsed = @(([[NSDate date] timeIntervalSince1970] - [lastTrackedTime longLongValue]) + 0.5);
+            timeElapsed = [NSNumber numberWithLongLong: [timeElapsed longLongValue]];
+            lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
+            
+            NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_focus", mPlayerId]];
+            NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
+                                     self.app_id, @"app_id",
+                                     @"ping", @"state",
+                                     timeElapsed, @"active_time",
+                                     nil];
+            
+            NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
+            [request setHTTPBody:postData];
+        
+            // We are already running in a thread so send the request synchronous to keep the thread alive.
+            [self enqueueRequest:request
+                       onSuccess:nil
+                       onFailure:nil
+                   isSynchronous:true];
+            [self endBackgroundFocusTask];
+        });
+    }
 }
 
 - (void)sendPurchase:(NSNumber*)amount onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
@@ -427,9 +448,20 @@ NSNumber* lastTrackedTime;
     self.lastMessageReceived = messageDict;
     
     // Clear bages and nofiications from this app. Setting to 1 then 0 was needed to clear the notifications.
+    clearBadgeCount();
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
+}
+
+bool clearBadgeCount() {
+    bool wasBadgeSet = false;
+    
+    if ([UIApplication sharedApplication].applicationIconBadgeNumber > 0)
+        wasBadgeSet = true;
+    
     [[UIApplication sharedApplication] setApplicationIconBadgeNumber:1];
     [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
-    [[UIApplication sharedApplication] cancelAllLocalNotifications];
+    
+    return wasBadgeSet;
 }
 
 - (NSDictionary*)getAdditionalData {
