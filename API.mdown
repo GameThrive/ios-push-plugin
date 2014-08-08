@@ -156,7 +156,7 @@ Call after notificationOpened to get the message text the use sees on their devi
 - __Example__
 
 	````objective-c
-	NSDictionary* additionalData = [gameThrive getAdditionalData];
+	NSString* message = [gameThrive getMessageString];
 	````
 
 <a name="getAdditionalData" />
@@ -164,12 +164,12 @@ Call after notificationOpened to get the message text the use sees on their devi
 Call after notificationOpened to get any additionalData that was sent with the notification.
 
 - __Returns__
- - __`NSDictionary*` __ - Key value pairs that were sent with the message.
+ - __`NSDictionary*`__ - Key value pairs that were sent with the message.
  
 - __Example__
 
 	````objective-c
-	NSString* message = [self.gameThrive getMessageString];
+	NSDictionary* additionalData = [gameThrive getAdditionalData];
 	````
 
 <a name="sendTag" />
