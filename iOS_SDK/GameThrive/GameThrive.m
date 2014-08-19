@@ -209,7 +209,7 @@ NSNumber* lastTrackedTime;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"iOS 1.3.1", @"sdk",
+                             @"iOS 1.3.2", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -508,7 +508,8 @@ bool clearBadgeCount() {
     if (data != nil && [data length] > 0) {
         innerJson = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
         if (jsonError != nil) {
-            failureBlock([NSError errorWithDomain:@"GTError" code:statusCode userInfo:@{@"returned" : jsonError}]);
+            if (failureBlock != nil)
+                failureBlock([NSError errorWithDomain:@"GTError" code:statusCode userInfo:@{@"returned" : jsonError}]);
             return;
         }
     }
