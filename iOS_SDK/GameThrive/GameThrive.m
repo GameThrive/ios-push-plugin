@@ -122,7 +122,17 @@ NSNumber* lastTrackedTime;
 }
 
 - (void)registerForPushNotifications {
-    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert];
+    // For iOS 8 devices
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
+        // ClassFromString to work around pre Xcode 6 link errors when building an app using the GameThrive framework.
+        Class uiUserNotificationSettings = NSClassFromString(@"UIUserNotificationSettings");
+        NSUInteger notificationTypes = 1 << 0 | 1 << 1 | 1 << 2; // Badge, Sound, and Alert
+        
+        [[UIApplication sharedApplication] registerUserNotificationSettings:[uiUserNotificationSettings settingsForTypes:notificationTypes categories:nil]];
+        [[UIApplication sharedApplication] registerForRemoteNotifications];
+    }
+    else // For iOS 7 devices
+        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound | UIRemoteNotificationTypeAlert];
 }
 
 - (void)registerDeviceToken:(id)inDeviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
@@ -209,7 +219,7 @@ NSNumber* lastTrackedTime;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"iOS 1.3.1", @"sdk",
+                             @"iOS1.4.0", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -440,7 +450,7 @@ NSNumber* lastTrackedTime;
     
     [self enqueueRequest:request onSuccess:nil onFailure:nil];
     
-    if ([customDict objectForKey:@"u"] != nil) {
+    if ([[UIApplication sharedApplication] applicationState] != UIApplicationStateActive && [customDict objectForKey:@"u"] != nil) {
         NSURL *url = [NSURL URLWithString:[customDict objectForKey:@"u"]];
         [[UIApplication sharedApplication] openURL:url];
     }
@@ -508,7 +518,8 @@ bool clearBadgeCount() {
     if (data != nil && [data length] > 0) {
         innerJson = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&jsonError];
         if (jsonError != nil) {
-            failureBlock([NSError errorWithDomain:@"GTError" code:statusCode userInfo:@{@"returned" : jsonError}]);
+            if (failureBlock != nil)
+                failureBlock([NSError errorWithDomain:@"GTError" code:statusCode userInfo:@{@"returned" : jsonError}]);
             return;
         }
     }
