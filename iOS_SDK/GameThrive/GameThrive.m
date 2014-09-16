@@ -26,6 +26,7 @@
 #import <sys/sysctl.h>
 #import <sys/utsname.h>
 #import <UIKit/UIKit.h>
+#import <objc/runtime.h>
 
 #define DEFAULT_PUSH_HOST @"https://gamethrive.com/api/v1/"
 
@@ -55,6 +56,7 @@ GTFailureBlock tokenUpdateFailureBlock;
 NSString* mPlayerId;
 
 GTIdsAvailableBlock idsAvailableBlockWhenReady;
+GTHandleNotificationBlock handleNotification;
 
 UIBackgroundTaskIdentifier focusBackgroundTask;
 
@@ -63,17 +65,27 @@ bool registeredWithApple = false;
 bool gameThriveReg = false;
 NSNumber* lastTrackedTime;
 
-- (id)init {
-    return [self init:nil autoRegister:true];
+- (id)initWithLaunchOptions:(NSDictionary*)launchOptions {
+    return [self initWithLaunchOptions:launchOptions appId:nil handleNotification:nil autoRegister:true];
 }
 
-- (id)init:(BOOL)autoRegister {
-    return [self init:nil autoRegister:autoRegister];
+- (id)initWithLaunchOptions:(NSDictionary*)launchOptions autoRegister:(BOOL)autoRegister {
+    return [self initWithLaunchOptions:launchOptions appId:nil handleNotification:nil autoRegister:autoRegister];
 }
 
-- (id)init:(NSString*)appId autoRegister:(BOOL)autoRegister {
+- (id)initWithLaunchOptions:(NSDictionary*)launchOptions handleNotification:(GTHandleNotificationBlock)callback {
+    return [self initWithLaunchOptions:launchOptions appId:nil handleNotification:callback autoRegister:true];
+}
+
+- (id)initWithLaunchOptions:(NSDictionary*)launchOptions appId:(NSString*)appId handleNotification:(GTHandleNotificationBlock)callback {
+    return [self initWithLaunchOptions:launchOptions appId:appId handleNotification:callback autoRegister:true];
+}
+
+- (id)initWithLaunchOptions:(NSDictionary*)launchOptions appId:(NSString*)appId handleNotification:(GTHandleNotificationBlock)callback autoRegister:(BOOL)autoRegister {
     self = [super init];
+    
     if (self) {
+        handleNotification = callback;
         lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
         
         if (appId)
@@ -81,7 +93,7 @@ NSNumber* lastTrackedTime;
         else
             self.app_id = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GameThrive_APPID"];
         
-        NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@", DEFAULT_PUSH_HOST]];
+        NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@", DEFAULT_PUSH_HOST]];
         self.httpClient = [[GTHTTPClient alloc] initWithBaseURL:url];
         
         struct utsname systemInfo;
@@ -94,7 +106,9 @@ NSNumber* lastTrackedTime;
         
         // Handle changes to the app id. This might happen on a developer's device when testing.
         NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-        if (![self.app_id isEqualToString:[defaults stringForKey:@"GT_APP_ID"]]) {
+        if (self.app_id == nil)
+            self.app_id = [defaults stringForKey:@"GT_APP_ID"];
+        else if (![self.app_id isEqualToString:[defaults stringForKey:@"GT_APP_ID"]]) {
             [defaults setObject:self.app_id forKey:@"GT_APP_ID"];
             [defaults setObject:nil forKey:@"GT_PLAYER_ID"];
             [defaults synchronize];
@@ -105,8 +119,6 @@ NSNumber* lastTrackedTime;
         registeredWithApple = mDeviceToken != nil || [defaults boolForKey:@"GT_REGISTERED_WITH_APPLE"];
         
         // Register this device with Apple's APNS server.
-        // Calls didRegisterForRemoteNotificationsWithDeviceToken in AppDelegate.m in their app,
-        // which in turns calls back into our SDK via the registerDeviceToken method.
         if (autoRegister || registeredWithApple)
             [self registerForPushNotifications];
         
@@ -116,13 +128,29 @@ NSNumber* lastTrackedTime;
             [self performSelector:@selector(registerPlayer) withObject:nil afterDelay:30.0f];
     }
     
+    NSDictionary* userInfo = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+    if (userInfo && userInfo[@"aps"][@"alert"]) // If alert is blank it is a silent notificaiton, don't processs as the usering opeing yet.
+        [self notificationOpened:userInfo isActive:false];
+    
     clearBadgeCount();
     
     return self;
 }
 
+// "registerForRemoteNotifications*" calls didRegisterForRemoteNotificationsWithDeviceToken
+// in the implementation UIApplication(GameThrivePush) below after contacting Apple's server.
 - (void)registerForPushNotifications {
-    [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeAlert];
+    // For iOS 8 devices
+    if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
+        // ClassFromString to work around pre Xcode 6 link errors when building an app using the GameThrive framework.
+        Class uiUserNotificationSettings = NSClassFromString(@"UIUserNotificationSettings");
+        NSUInteger notificationTypes = 1 << 0 | 1 << 1 | 1 << 2; // Badge, Sound, and Alert
+        
+        [[UIApplication sharedApplication] registerUserNotificationSettings:[uiUserNotificationSettings settingsForTypes:notificationTypes categories:nil]];
+        [[UIApplication sharedApplication] registerForRemoteNotifications];
+    }
+    else // For iOS 6 & 7 devices
+        [[UIApplication sharedApplication] registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound | UIRemoteNotificationTypeAlert];
 }
 
 - (void)registerDeviceToken:(id)inDeviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
@@ -209,7 +237,7 @@ NSNumber* lastTrackedTime;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"iOS 1.3.2", @"sdk",
+                             @"010500", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -423,7 +451,7 @@ NSNumber* lastTrackedTime;
     [self sendPurchase:amount onSuccess:nil onFailure:nil];
 }
 
-- (void)notificationOpened:(NSDictionary*)messageDict {
+- (void)notificationOpened:(NSDictionary*)messageDict isActive:(BOOL)isActive {
     NSDictionary* customDict = [messageDict objectForKey:@"custom"];
     NSString* messageId = [customDict objectForKey:@"i"];
     
@@ -440,7 +468,7 @@ NSNumber* lastTrackedTime;
     
     [self enqueueRequest:request onSuccess:nil onFailure:nil];
     
-    if ([customDict objectForKey:@"u"] != nil) {
+    if ([[UIApplication sharedApplication] applicationState] != UIApplicationStateActive && [customDict objectForKey:@"u"] != nil) {
         NSURL *url = [NSURL URLWithString:[customDict objectForKey:@"u"]];
         [[UIApplication sharedApplication] openURL:url];
     }
@@ -450,6 +478,9 @@ NSNumber* lastTrackedTime;
     // Clear bages and nofiications from this app. Setting to 1 then 0 was needed to clear the notifications.
     clearBadgeCount();
     [[UIApplication sharedApplication] cancelAllLocalNotifications];
+    
+    if (handleNotification)
+        handleNotification([self getMessageString], [self getAdditionalData], isActive);
 }
 
 bool clearBadgeCount() {
@@ -469,7 +500,7 @@ bool clearBadgeCount() {
 }
 
 - (NSString*)getMessageString {
-    return [[self.lastMessageReceived objectForKey:@"aps"] objectForKey:@"alert"];
+    return self.lastMessageReceived[@"aps"][@"alert"];
 }
 
 - (void)enqueueRequest:(NSURLRequest*)request onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
@@ -542,3 +573,185 @@ bool clearBadgeCount() {
 }
 
 @end
+
+
+
+
+
+
+@implementation UIApplication(GameThrivePush)
+
+- (void)gameThriveDidRegisterForRemoteNotifications:(UIApplication*)app deviceToken:(NSData*)deviceToken {
+    NSLog(@"Device Registered with Apple.");
+    [[GameThrive defaultClient] registerDeviceToken:deviceToken onSuccess:^(NSDictionary* results) {
+        NSLog(@"Device Registered with GameThrive.");
+    } onFailure:^(NSError* error) {
+        NSLog(@"Error in GameThrive Registration: %@", error);
+    }];
+    
+    if ([self respondsToSelector:@selector(gameThriveDidRegisterForRemoteNotifications:deviceToken:)])
+        [self gameThriveDidRegisterForRemoteNotifications:app deviceToken:deviceToken];
+}
+
+- (void)gameThriveDidFailRegisterForRemoteNotification:(UIApplication*)app error:(NSError*)err {
+    NSLog(@"Error registering for Apple push notifications. Error: %@", err);
+    
+    if ([self respondsToSelector:@selector(gameThriveDidFailRegisterForRemoteNotification:error:)])
+        [self gameThriveDidFailRegisterForRemoteNotification:app error:err];
+}
+
+- (void)gameThriveReceivedRemoteNotification:(UIApplication*)application userInfo:(NSDictionary*)userInfo {
+    [[GameThrive defaultClient] notificationOpened:userInfo isActive:[application applicationState] == UIApplicationStateActive];
+    
+    if ([self respondsToSelector:@selector(gameThriveReceivedRemoteNotification:userInfo:)])
+        [self gameThriveReceivedRemoteNotification:application userInfo:userInfo];
+}
+
+- (void) gameThriveRemoteSilentNotification:(UIApplication*)application UserInfo:(NSDictionary*)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult)) completionHandler {
+    
+    if (userInfo[@"m"]) {
+        NSDictionary* data = userInfo;
+        
+        UIMutableUserNotificationCategory* category = [[UIMutableUserNotificationCategory alloc] init];
+        category.identifier = @"dynamic";
+        
+        NSMutableArray* actionArray = [[NSMutableArray alloc] init];
+        for (NSDictionary* button in data[@"o"]) {
+            UIMutableUserNotificationAction* action = [[UIMutableUserNotificationAction alloc] init];
+            action.title = button[@"n"];
+            action.identifier = button[@"i"] ? button[@"i"] : action.title;
+            action.activationMode = UIUserNotificationActivationModeForeground;
+            action.destructive = NO;
+            action.authenticationRequired = NO;
+            
+            [actionArray addObject:action];
+        }
+        
+        [category setActions:actionArray forContext:UIUserNotificationActionContextDefault];
+        
+        UIUserNotificationSettings* notificationSettings = [UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeBadge | UIUserNotificationTypeAlert)
+                                                                                             categories:[NSSet setWithObject:category]];
+        [[UIApplication sharedApplication] registerUserNotificationSettings:notificationSettings];
+        
+        UILocalNotification* notification = [[UILocalNotification alloc] init];
+        notification.category = category.identifier;
+        notification.alertBody = data[@"m"];
+        notification.userInfo = userInfo;
+        notification.soundName = data[@"s"];
+        if (data[@"b"])
+            notification.applicationIconBadgeNumber = [data[@"b"] intValue];
+        
+        [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    }
+    
+    if ([self respondsToSelector:@selector(gameThriveRemoteSilentNotification:UserInfo:fetchCompletionHandler:)])
+        [self gameThriveRemoteSilentNotification:application UserInfo:userInfo fetchCompletionHandler:completionHandler];
+    else
+        completionHandler(UIBackgroundFetchResultNewData);
+}
+
++ (void)processLocalActionBasedNotification:(UILocalNotification*) notification identifier:(NSString*)identifier {
+    NSMutableDictionary* userInfo = [notification.userInfo mutableCopy];
+    NSMutableDictionary* customDict = [userInfo[@"custom"] mutableCopy];
+    NSMutableDictionary* additionalData = [[NSMutableDictionary alloc] initWithDictionary:customDict[@"a"]];
+    
+    NSMutableArray* buttonArray = [[NSMutableArray alloc] init];
+    for (NSDictionary* button in userInfo[@"o"]) {
+        [buttonArray addObject: @{@"text" : button[@"n"],
+                                  @"id" : (button[@"i"] ? button[@"i"] : button[@"n"])}];
+    }
+    
+    additionalData[@"actionSelected"] = identifier;
+    additionalData[@"actionButtons"] = buttonArray;
+    
+    customDict[@"a"] = additionalData;
+    userInfo[@"custom"] = customDict;
+    
+    userInfo[@"aps"] = @{@"alert" : userInfo[@"m"]};
+    
+    [[GameThrive defaultClient] notificationOpened:userInfo isActive:[[UIApplication sharedApplication] applicationState] == UIApplicationStateActive];
+}
+
+- (void) gameThriveLocalNotificationOpened:(UIApplication*)application handleActionWithIdentifier:(NSString*)identifier forLocalNotification:(UILocalNotification*)notification completionHandler:(void(^)()) completionHandler {
+    
+    completionHandler(); // Currently we are opening the app so complete right away since we are not doing any background processing.
+    
+    [UIApplication processLocalActionBasedNotification:notification identifier:identifier];
+    
+    if ([self respondsToSelector:@selector(gameThriveLocalNotificationOpened:handleActionWithIdentifier:forLocalNotification:completionHandler:)])
+        [self gameThriveLocalNotificationOpened:application handleActionWithIdentifier:identifier forLocalNotification:notification completionHandler:completionHandler];
+}
+
+- (void)gameThriveLocalNotificaionOpened:(UIApplication*)application notification:(UILocalNotification*)notification {
+    [UIApplication processLocalActionBasedNotification:notification identifier:@"__DEFAULT__"];
+    
+    if ([self respondsToSelector:@selector(gameThriveLocalNotificaionOpened:notification:)])
+        [self gameThriveLocalNotificaionOpened:application notification:notification];
+}
+
+- (void)gameThriveApplicationWillResignActive:(UIApplication*)application {
+    [[GameThrive defaultClient] onFocus:@"suspend"];
+    
+    if ([self respondsToSelector:@selector(gameThriveApplicationWillResignActive:)])
+        [self gameThriveApplicationWillResignActive:application];
+}
+- (void)gameThriveApplicationDidBecomeActive:(UIApplication*)application {
+    [[GameThrive defaultClient] onFocus:@"resume"];
+    
+    if ([self respondsToSelector:@selector(gameThriveApplicationDidBecomeActive:)])
+        [self gameThriveApplicationDidBecomeActive:application];
+}
+
+
+static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL makeLikeSel) {
+    Method newMeth = class_getInstanceMethod(newClass, newSel);
+    IMP imp = method_getImplementation(newMeth);
+    const char* methodTypeEncoding = method_getTypeEncoding(newMeth);
+    
+    BOOL successful = class_addMethod(addToClass, makeLikeSel, imp, methodTypeEncoding);
+    if (!successful) {
+        class_addMethod(addToClass, newSel, imp, methodTypeEncoding);
+        newMeth = class_getInstanceMethod(addToClass, newSel);
+        
+        Method orgMeth = class_getInstanceMethod(addToClass, makeLikeSel);
+        
+        method_exchangeImplementations(orgMeth, newMeth);
+    }
+}
+
++ (void)load {
+    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setDelegate:)), class_getInstanceMethod(self, @selector(setGameThriveDelegate:)));
+}
+
+- (void) setGameThriveDelegate:(id<UIApplicationDelegate>)delegate {
+    Class delegateClass = [delegate class];
+    
+    injectSelector(self.class, @selector(gameThriveRemoteSilentNotification:UserInfo:fetchCompletionHandler:),
+                    delegateClass, @selector(application:didReceiveRemoteNotification:fetchCompletionHandler:));
+    
+    injectSelector(self.class, @selector(gameThriveLocalNotificationOpened:handleActionWithIdentifier:forLocalNotification:completionHandler:),
+                    delegateClass, @selector(application:handleActionWithIdentifier:forLocalNotification:completionHandler:));
+    
+    injectSelector(self.class, @selector(gameThriveDidRegisterForRemoteNotifications:deviceToken:),
+                    delegateClass, @selector(application:didRegisterForRemoteNotificationsWithDeviceToken:));
+    
+    injectSelector(self.class, @selector(gameThriveDidFailRegisterForRemoteNotification:error:),
+                    delegateClass, @selector(application:didFailToRegisterForRemoteNotificationsWithError:));
+    
+    injectSelector(self.class, @selector(gameThriveReceivedRemoteNotification:userInfo:),
+                    delegateClass, @selector(application:didReceiveRemoteNotification:));
+    
+    injectSelector(self.class, @selector(gameThriveLocalNotificaionOpened:notification:),
+                    delegateClass, @selector(application:didReceiveLocalNotification:));
+    
+    injectSelector(self.class, @selector(gameThriveApplicationWillResignActive:),
+                    delegateClass, @selector(applicationWillResignActive:));
+    
+    injectSelector(self.class, @selector(gameThriveApplicationDidBecomeActive:),
+                    delegateClass, @selector(applicationDidBecomeActive:));
+    
+    [self setGameThriveDelegate:delegate];
+}
+
+@end
+
