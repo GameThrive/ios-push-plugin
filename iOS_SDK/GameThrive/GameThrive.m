@@ -237,7 +237,7 @@ NSNumber* lastTrackedTime;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010500", @"sdk",
+                             @"010501", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -600,6 +600,8 @@ bool clearBadgeCount() {
         [self gameThriveDidFailRegisterForRemoteNotification:app error:err];
 }
 
+// Notification opened! iOS 6 ONLY!
+//     gameThriveRemoteSilentNotification gets called on iOS 7 & 8
 - (void)gameThriveReceivedRemoteNotification:(UIApplication*)application userInfo:(NSDictionary*)userInfo {
     [[GameThrive defaultClient] notificationOpened:userInfo isActive:[application applicationState] == UIApplicationStateActive];
     
@@ -607,6 +609,7 @@ bool clearBadgeCount() {
         [self gameThriveReceivedRemoteNotification:application userInfo:userInfo];
 }
 
+// Notification opened or silent one received on iOS 7 & 8
 - (void) gameThriveRemoteSilentNotification:(UIApplication*)application UserInfo:(NSDictionary*)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult)) completionHandler {
     
     if (userInfo[@"m"]) {
@@ -629,8 +632,7 @@ bool clearBadgeCount() {
         
         [category setActions:actionArray forContext:UIUserNotificationActionContextDefault];
         
-        UIUserNotificationSettings* notificationSettings = [UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeBadge | UIUserNotificationTypeAlert)
-                                                                                             categories:[NSSet setWithObject:category]];
+        UIUserNotificationSettings* notificationSettings = [UIUserNotificationSettings settingsForTypes:(UIUserNotificationTypeSound | UIUserNotificationTypeBadge | UIUserNotificationTypeAlert) categories:[NSSet setWithObject:category]];
         [[UIApplication sharedApplication] registerUserNotificationSettings:notificationSettings];
         
         UILocalNotification* notification = [[UILocalNotification alloc] init];
@@ -643,6 +645,8 @@ bool clearBadgeCount() {
         
         [[UIApplication sharedApplication] scheduleLocalNotification:notification];
     }
+    else
+        [[GameThrive defaultClient] notificationOpened:userInfo isActive:[application applicationState] == UIApplicationStateActive];
     
     if ([self respondsToSelector:@selector(gameThriveRemoteSilentNotification:UserInfo:fetchCompletionHandler:)])
         [self gameThriveRemoteSilentNotification:application UserInfo:userInfo fetchCompletionHandler:completionHandler];
@@ -726,6 +730,9 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
 - (void) setGameThriveDelegate:(id<UIApplicationDelegate>)delegate {
     Class delegateClass = [delegate class];
     
+    injectSelector(self.class, @selector(gameThriveReceivedRemoteNotification:userInfo:),
+                   delegateClass, @selector(application:didReceiveRemoteNotification:));
+    
     injectSelector(self.class, @selector(gameThriveRemoteSilentNotification:UserInfo:fetchCompletionHandler:),
                     delegateClass, @selector(application:didReceiveRemoteNotification:fetchCompletionHandler:));
     
@@ -737,9 +744,6 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
     
     injectSelector(self.class, @selector(gameThriveDidFailRegisterForRemoteNotification:error:),
                     delegateClass, @selector(application:didFailToRegisterForRemoteNotificationsWithError:));
-    
-    injectSelector(self.class, @selector(gameThriveReceivedRemoteNotification:userInfo:),
-                    delegateClass, @selector(application:didReceiveRemoteNotification:));
     
     injectSelector(self.class, @selector(gameThriveLocalNotificaionOpened:notification:),
                     delegateClass, @selector(application:didReceiveLocalNotification:));
