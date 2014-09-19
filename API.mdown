@@ -171,24 +171,9 @@ Lets you retrieve the GameThrive player id and push token. Your callback block i
 Block for GameThrive methods that gets called when the GameThrive server is contacted successfully.
 
    -  __Parameters__
-     - __`NSString*` _result___ - The resulting JSON response from the GameThrive server.
- 
-- __Example__
-
-	````objective-c
-	[gameThrive getTags:^(NSDictionary* result) {
-		NSLog(@"%@", result);
-	}];
-	````
-
-<a name="GTResultSuccessBlock" />
-#### GTResultSuccessBlock
-Block for GameThrive methods that gets called when the GameThrive server is contacted successfully.
-
-   -  __Parameters__
      - __`NSDictionary*` _message___ - Visable text the user seen on the push notification itself.
      - __`NSDictionary*` _additionalData___ - Key value pairs set on the additional data section on gamethrive.com.
-     	NOTE: If you set Action Buttons on your notifications the actionSelected key will contain the id of the button pressed.
+     	NOTE: If you set Action Buttons on your notifications the actionSelected key will contain the id of the button pressed. "__DEFAULT__" will be the id if the user tap on the notification it self when buttons were present.
      - __`BOOL` _isActive___ - True if user is currently using your app when the notification came in.
  
 - __Example__
@@ -232,6 +217,21 @@ Block for GameThrive methods that gets called when the GameThrive server is cont
 	            [alertView show];
 
     	}];
+	````
+
+<a name="GTResultSuccessBlock" />
+#### GTResultSuccessBlock
+Block for GameThrive methods that gets called when the GameThrive server is contacted successfully.
+
+   -  __Parameters__
+     - __`NSDictionary` _result___ - The resulting JSON response from the GameThrive server.
+ 
+- __Example__
+
+	````objective-c
+	[gameThrive getTags:^(NSDictionary* result) {
+		NSLog(@"%@", result);
+	}];
 
 	````
 
