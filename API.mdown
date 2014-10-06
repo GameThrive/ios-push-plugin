@@ -348,8 +348,9 @@ Lets you retrieve the GameThrive player id and device token. Your block is calle
 
    - __Parameters__
      - __`NSString*` _playerId___ - GameThrive playerId is a UUID formatted string.(_unique per device per app_)
-     - __`NSString*` _registrationId___ - pushToken is a Apple assigned identifier(_unique per device per app_).
+     - __`NSString*` _pushToken___ - pushToken is a Apple assigned identifier(_unique per device per app_).
       - _NOTE:_ Might be `nil` if the user does not accept push notifications for your app or there was a connection issue.
+	  - _NOTE2:_ If you disable auto register or the user waits over 30 seconds to say yes to the system prompt then your call back will be called twice. First with just the playerId filed and then a 2nd time to with the push token included.
    
  
 - __Example__

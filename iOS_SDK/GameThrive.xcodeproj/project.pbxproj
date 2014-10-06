@@ -11,7 +11,7 @@
 			isa = PBXAggregateTarget;
 			buildConfigurationList = 3774802D19148A3800558FAD /* Build configuration list for PBXAggregateTarget "GameThrive.Framework" */;
 			buildPhases = (
-				3774803019148A5800558FAD /* ShellScript */,
+				3774803019148A5800558FAD /* Run Script */,
 				37284AE219149EBA00C5BCF7 /* CopyFiles */,
 			);
 			dependencies = (
@@ -23,9 +23,9 @@
 
 /* Begin PBXBuildFile section */
 		37284AE71914A43600C5BCF7 /* GameThrive.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 37747FC01914837300558FAD /* GameThrive.h */; };
-		37747F9719147D6500558FAD /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37747F9619147D6500558FAD /* Foundation.framework */; };
 		37747FC51914837300558FAD /* GTHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 37747FBD1914837300558FAD /* GTHTTPClient.m */; };
 		37747FC71914837300558FAD /* GameThrive.m in Sources */ = {isa = PBXBuildFile; fileRef = 37747FC11914837300558FAD /* GameThrive.m */; };
+		37E6B2BB19D9CAF300D0C601 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37E6B2BA19D9CAF300D0C601 /* UIKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -52,12 +52,12 @@
 
 /* Begin PBXFileReference section */
 		37747F9319147D6500558FAD /* libGameThrive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGameThrive.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		37747F9619147D6500558FAD /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		37747FBC1914837300558FAD /* GTHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTHTTPClient.h; sourceTree = "<group>"; };
 		37747FBD1914837300558FAD /* GTHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTHTTPClient.m; sourceTree = "<group>"; };
 		37747FC01914837300558FAD /* GameThrive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameThrive.h; sourceTree = "<group>"; };
 		37747FC11914837300558FAD /* GameThrive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameThrive.m; sourceTree = "<group>"; };
 		378699FC1919B5FB00C3E7DA /* GameThrive-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GameThrive-Prefix.pch"; sourceTree = "<group>"; };
+		37E6B2BA19D9CAF300D0C601 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,7 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37747F9719147D6500558FAD /* Foundation.framework in Frameworks */,
+				37E6B2BB19D9CAF300D0C601 /* UIKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,7 +92,7 @@
 		37747F9519147D6500558FAD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				37747F9619147D6500558FAD /* Foundation.framework */,
+				37E6B2BA19D9CAF300D0C601 /* UIKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -157,13 +157,14 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		3774803019148A5800558FAD /* ShellScript */ = {
+		3774803019148A5800558FAD /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -197,6 +198,7 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_MODULES_AUTOLINK = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
@@ -238,6 +240,7 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_MODULES_AUTOLINK = NO;
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
