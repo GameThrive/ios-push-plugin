@@ -271,7 +271,7 @@ int mNotificationTypes = -1;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010504", @"sdk",
+                             @"010505", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -855,13 +855,12 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
     method_exchangeImplementations(class_getInstanceMethod(self, @selector(setDelegate:)), class_getInstanceMethod(self, @selector(setGameThriveDelegate:)));
 }
 
+static Class delegateClass = nil;
+
 - (void) setGameThriveDelegate:(id<UIApplicationDelegate>)delegate {
-    static Class delegateClass = nil;
     
-	if(delegateClass == [delegate class]) {
-		[self setGameThriveDelegate:delegate];
+	if(delegateClass != nil)
 		return;
-	}
     
 	delegateClass = [delegate class];
     
