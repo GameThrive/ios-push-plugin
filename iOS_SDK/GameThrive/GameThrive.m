@@ -20,6 +20,8 @@
 
 #import "GameThrive.h"
 #import "GTHTTPClient.h"
+#import "GTTrackPlayerPurchase.h"
+
 #import <stdlib.h>
 #import <stdio.h>
 #import <sys/types.h>
@@ -64,6 +66,8 @@ GTIdsAvailableBlock idsAvailableBlockWhenReady;
 GTHandleNotificationBlock handleNotification;
 
 UIBackgroundTaskIdentifier focusBackgroundTask;
+
+GTTrackPlayerPurchase* trackPlayerPurchase;
 
 
 bool registeredWithApple = false; // Has attempted to register for push notifications with Apple.
@@ -146,6 +150,9 @@ int mNotificationTypes = -1;
     }
     
     clearBadgeCount();
+    
+    if ([GTTrackPlayerPurchase canTrack])
+        trackPlayerPurchase = [[GTTrackPlayerPurchase alloc] init];
     
     return self;
 }
@@ -271,7 +278,7 @@ int mNotificationTypes = -1;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010505", @"sdk",
+                             @"010600", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -506,7 +513,7 @@ NSString* getUsableDeviceToken() {
     }
 }
 
-- (void)sendPurchase:(NSNumber*)amount onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+- (void)sendPurchases:(NSArray*)purchases {
     if (mPlayerId == nil)
         return;
     
@@ -514,18 +521,23 @@ NSString* getUsableDeviceToken() {
     
     NSDictionary *dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                              self.app_id, @"app_id",
-                             amount, @"amount",
+                             purchases, @"purchases",
                              nil];
     
     NSData *postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
     [request setHTTPBody:postData];
     
     [self enqueueRequest:request
-               onSuccess:successBlock
-               onFailure:failureBlock];
+               onSuccess:nil
+               onFailure:nil];
 }
+
+- (void)sendPurchase:(NSNumber*)amount onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
+    NSLog(@"sendPurchase is deprecated as this is now automatic for Apple IAP purchases. The method does nothing!");
+}
+
 - (void)sendPurchase:(NSNumber*)amount {
-    [self sendPurchase:amount onSuccess:nil onFailure:nil];
+    NSLog(@"sendPurchase is deprecated as this is now automatic for Apple IAP purchases. The method does nothing!");
 }
 
 - (void)notificationOpened:(NSDictionary*)messageDict isActive:(BOOL)isActive {
@@ -684,8 +696,21 @@ int getNotificationTypes() {
 @end
 
 
-
-
+static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL makeLikeSel) {
+    Method newMeth = class_getInstanceMethod(newClass, newSel);
+    IMP imp = method_getImplementation(newMeth);
+    const char* methodTypeEncoding = method_getTypeEncoding(newMeth);
+    
+    BOOL successful = class_addMethod(addToClass, makeLikeSel, imp, methodTypeEncoding);
+    if (!successful) {
+        class_addMethod(addToClass, newSel, imp, methodTypeEncoding);
+        newMeth = class_getInstanceMethod(addToClass, newSel);
+        
+        Method orgMeth = class_getInstanceMethod(addToClass, makeLikeSel);
+        
+        method_exchangeImplementations(orgMeth, newMeth);
+    }
+}
 
 
 @implementation UIApplication(GameThrivePush)
@@ -834,26 +859,11 @@ int getNotificationTypes() {
         [self gameThriveApplicationDidBecomeActive:application];
 }
 
-
-static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL makeLikeSel) {
-    Method newMeth = class_getInstanceMethod(newClass, newSel);
-    IMP imp = method_getImplementation(newMeth);
-    const char* methodTypeEncoding = method_getTypeEncoding(newMeth);
-    
-    BOOL successful = class_addMethod(addToClass, makeLikeSel, imp, methodTypeEncoding);
-    if (!successful) {
-        class_addMethod(addToClass, newSel, imp, methodTypeEncoding);
-        newMeth = class_getInstanceMethod(addToClass, newSel);
-        
-        Method orgMeth = class_getInstanceMethod(addToClass, makeLikeSel);
-        
-        method_exchangeImplementations(orgMeth, newMeth);
-    }
-}
-
 + (void)load {
     method_exchangeImplementations(class_getInstanceMethod(self, @selector(setDelegate:)), class_getInstanceMethod(self, @selector(setGameThriveDelegate:)));
 }
+
+
 
 static Class delegateClass = nil;
 
@@ -890,6 +900,7 @@ static Class delegateClass = nil;
     
     injectSelector(self.class, @selector(gameThriveApplicationDidBecomeActive:),
                     delegateClass, @selector(applicationDidBecomeActive:));
+    
     
     [self setGameThriveDelegate:delegate];
 }

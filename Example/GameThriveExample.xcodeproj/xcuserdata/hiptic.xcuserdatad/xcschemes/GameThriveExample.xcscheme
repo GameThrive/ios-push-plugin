@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "DE4BCB62161638D4003F4A66"
-               BuildableName = "GameThriveExample.app"
-               BlueprintName = "GameThriveExample"
+               BuildableName = "GameThriveExample3.app"
+               BlueprintName = "GameThriveExample3"
                ReferencedContainer = "container:GameThriveExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,8 +33,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "DE4BCB62161638D4003F4A66"
-            BuildableName = "GameThriveExample.app"
-            BlueprintName = "GameThriveExample"
+            BuildableName = "GameThriveExample3.app"
+            BlueprintName = "GameThriveExample3"
             ReferencedContainer = "container:GameThriveExample.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -52,8 +52,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "DE4BCB62161638D4003F4A66"
-            BuildableName = "GameThriveExample.app"
-            BlueprintName = "GameThriveExample"
+            BuildableName = "GameThriveExample3.app"
+            BlueprintName = "GameThriveExample3"
             ReferencedContainer = "container:GameThriveExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -70,8 +70,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "DE4BCB62161638D4003F4A66"
-            BuildableName = "GameThriveExample.app"
-            BlueprintName = "GameThriveExample"
+            BuildableName = "GameThriveExample3.app"
+            BlueprintName = "GameThriveExample3"
             ReferencedContainer = "container:GameThriveExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

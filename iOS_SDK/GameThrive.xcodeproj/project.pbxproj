@@ -22,6 +22,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		371FDED919F1A486001479B7 /* GTTrackPlayerPurchase.m in Sources */ = {isa = PBXBuildFile; fileRef = 371FDED819F1A486001479B7 /* GTTrackPlayerPurchase.m */; };
 		37284AE71914A43600C5BCF7 /* GameThrive.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 37747FC01914837300558FAD /* GameThrive.h */; };
 		37747FC51914837300558FAD /* GTHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 37747FBD1914837300558FAD /* GTHTTPClient.m */; };
 		37747FC71914837300558FAD /* GameThrive.m in Sources */ = {isa = PBXBuildFile; fileRef = 37747FC11914837300558FAD /* GameThrive.m */; };
@@ -51,6 +52,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		371FDED819F1A486001479B7 /* GTTrackPlayerPurchase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTTrackPlayerPurchase.m; sourceTree = "<group>"; };
+		371FDEDA19F1F9D9001479B7 /* GTTrackPlayerPurchase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTTrackPlayerPurchase.h; sourceTree = "<group>"; };
 		37747F9319147D6500558FAD /* libGameThrive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGameThrive.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		37747FBC1914837300558FAD /* GTHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTHTTPClient.h; sourceTree = "<group>"; };
 		37747FBD1914837300558FAD /* GTHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTHTTPClient.m; sourceTree = "<group>"; };
@@ -105,6 +108,8 @@
 				37747FBD1914837300558FAD /* GTHTTPClient.m */,
 				37747FC01914837300558FAD /* GameThrive.h */,
 				37747FC11914837300558FAD /* GameThrive.m */,
+				371FDED819F1A486001479B7 /* GTTrackPlayerPurchase.m */,
+				371FDEDA19F1F9D9001479B7 /* GTTrackPlayerPurchase.h */,
 			);
 			path = GameThrive;
 			sourceTree = "<group>";
@@ -178,6 +183,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				371FDED919F1A486001479B7 /* GTTrackPlayerPurchase.m in Sources */,
 				37747FC51914837300558FAD /* GTHTTPClient.m in Sources */,
 				37747FC71914837300558FAD /* GameThrive.m in Sources */,
 			);

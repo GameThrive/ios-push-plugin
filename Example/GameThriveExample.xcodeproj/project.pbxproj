@@ -7,36 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		37284AE61914A32E00C5BCF7 /* GameThrive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37284AE51914A32E00C5BCF7 /* GameThrive.framework */; };
+		376B059419D20E8800C18537 /* GameThrive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 376B059319D20E8800C18537 /* GameThrive.framework */; };
 		37869A001919CAAF00C3E7DA /* 57.png in Resources */ = {isa = PBXBuildFile; fileRef = 378699FD1919CAAF00C3E7DA /* 57.png */; };
 		37869A011919CAAF00C3E7DA /* 114.png in Resources */ = {isa = PBXBuildFile; fileRef = 378699FE1919CAAF00C3E7DA /* 114.png */; };
 		37869A021919CAAF00C3E7DA /* 120.png in Resources */ = {isa = PBXBuildFile; fileRef = 378699FF1919CAAF00C3E7DA /* 120.png */; };
 		37D0A46A192B077E009DC9F4 /* notification.wav in Resources */ = {isa = PBXBuildFile; fileRef = 37D0A469192B077E009DC9F4 /* notification.wav */; };
-		DE4BCB68161638D4003F4A66 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4BCB67161638D4003F4A66 /* UIKit.framework */; };
-		DE4BCB6A161638D4003F4A66 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4BCB69161638D4003F4A66 /* Foundation.framework */; };
-		DE4BCB6C161638D4003F4A66 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4BCB6B161638D4003F4A66 /* CoreGraphics.framework */; };
+		37F9CA1D19D9CBAD0084DB7F /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37F9CA1C19D9CBAD0084DB7F /* UIKit.framework */; };
 		DE4BCB72161638D4003F4A66 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DE4BCB70161638D4003F4A66 /* InfoPlist.strings */; };
 		DE4BCB74161638D4003F4A66 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DE4BCB73161638D4003F4A66 /* main.m */; };
 		DE4BCB78161638D4003F4A66 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DE4BCB77161638D4003F4A66 /* AppDelegate.m */; };
 		DE4BCB7B161638D4003F4A66 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DE4BCB79161638D4003F4A66 /* MainStoryboard.storyboard */; };
 		DE4BCB7E161638D4003F4A66 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DE4BCB7D161638D4003F4A66 /* ViewController.m */; };
-		DE4BCB871616392E003F4A66 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE4BCB861616392E003F4A66 /* CoreData.framework */; };
-		DEE2A438165C16470022391A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEE2A437165C16470022391A /* SystemConfiguration.framework */; };
-		DEE2A43B165C164C0022391A /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEE2A43A165C164C0022391A /* MobileCoreServices.framework */; };
 		DEE5C41C162F34490024001B /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = DEE5C41B162F34490024001B /* Default-568h@2x.png */; };
-		DEE777AE162DFF0C002E9E33 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEE777AD162DFF0C002E9E33 /* Security.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		37284AE51914A32E00C5BCF7 /* GameThrive.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameThrive.framework; path = ../iOS_SDK/Framework/GameThrive.framework; sourceTree = "<group>"; };
+		376B059319D20E8800C18537 /* GameThrive.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameThrive.framework; path = ../iOS_SDK/Framework/GameThrive.framework; sourceTree = "<group>"; };
 		378699FD1919CAAF00C3E7DA /* 57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 57.png; sourceTree = "<group>"; };
 		378699FE1919CAAF00C3E7DA /* 114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 114.png; sourceTree = "<group>"; };
 		378699FF1919CAAF00C3E7DA /* 120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 120.png; sourceTree = "<group>"; };
 		37D0A469192B077E009DC9F4 /* notification.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = notification.wav; sourceTree = "<group>"; };
-		DE4BCB63161638D4003F4A66 /* GameThriveExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameThriveExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DE4BCB67161638D4003F4A66 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		DE4BCB69161638D4003F4A66 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		DE4BCB6B161638D4003F4A66 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		37F9CA1C19D9CBAD0084DB7F /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		DE4BCB63161638D4003F4A66 /* GameThriveExample3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GameThriveExample3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE4BCB6F161638D4003F4A66 /* GameThriveExample-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GameThriveExample-Info.plist"; sourceTree = "<group>"; };
 		DE4BCB71161638D4003F4A66 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		DE4BCB73161638D4003F4A66 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -46,11 +38,7 @@
 		DE4BCB7A161638D4003F4A66 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard.storyboard; sourceTree = "<group>"; };
 		DE4BCB7C161638D4003F4A66 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		DE4BCB7D161638D4003F4A66 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		DE4BCB861616392E003F4A66 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
-		DEE2A437165C16470022391A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		DEE2A43A165C164C0022391A /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		DEE5C41B162F34490024001B /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		DEE777AD162DFF0C002E9E33 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,14 +46,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37284AE61914A32E00C5BCF7 /* GameThrive.framework in Frameworks */,
-				DEE2A43B165C164C0022391A /* MobileCoreServices.framework in Frameworks */,
-				DEE2A438165C16470022391A /* SystemConfiguration.framework in Frameworks */,
-				DEE777AE162DFF0C002E9E33 /* Security.framework in Frameworks */,
-				DE4BCB871616392E003F4A66 /* CoreData.framework in Frameworks */,
-				DE4BCB68161638D4003F4A66 /* UIKit.framework in Frameworks */,
-				DE4BCB6A161638D4003F4A66 /* Foundation.framework in Frameworks */,
-				DE4BCB6C161638D4003F4A66 /* CoreGraphics.framework in Frameworks */,
+				37F9CA1D19D9CBAD0084DB7F /* UIKit.framework in Frameworks */,
+				376B059419D20E8800C18537 /* GameThrive.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -88,7 +70,7 @@
 		DE4BCB64161638D4003F4A66 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				DE4BCB63161638D4003F4A66 /* GameThriveExample.app */,
+				DE4BCB63161638D4003F4A66 /* GameThriveExample3.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -96,14 +78,8 @@
 		DE4BCB66161638D4003F4A66 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				37284AE51914A32E00C5BCF7 /* GameThrive.framework */,
-				DEE2A43A165C164C0022391A /* MobileCoreServices.framework */,
-				DEE2A437165C16470022391A /* SystemConfiguration.framework */,
-				DEE777AD162DFF0C002E9E33 /* Security.framework */,
-				DE4BCB861616392E003F4A66 /* CoreData.framework */,
-				DE4BCB67161638D4003F4A66 /* UIKit.framework */,
-				DE4BCB69161638D4003F4A66 /* Foundation.framework */,
-				DE4BCB6B161638D4003F4A66 /* CoreGraphics.framework */,
+				37F9CA1C19D9CBAD0084DB7F /* UIKit.framework */,
+				376B059319D20E8800C18537 /* GameThrive.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -136,9 +112,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		DE4BCB62161638D4003F4A66 /* GameThriveExample */ = {
+		DE4BCB62161638D4003F4A66 /* GameThriveExample3 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = DE4BCB81161638D4003F4A66 /* Build configuration list for PBXNativeTarget "GameThriveExample" */;
+			buildConfigurationList = DE4BCB81161638D4003F4A66 /* Build configuration list for PBXNativeTarget "GameThriveExample3" */;
 			buildPhases = (
 				DE4BCB5F161638D4003F4A66 /* Sources */,
 				DE4BCB60161638D4003F4A66 /* Frameworks */,
@@ -148,9 +124,9 @@
 			);
 			dependencies = (
 			);
-			name = GameThriveExample;
+			name = GameThriveExample3;
 			productName = "push-notifications";
-			productReference = DE4BCB63161638D4003F4A66 /* GameThriveExample.app */;
+			productReference = DE4BCB63161638D4003F4A66 /* GameThriveExample3.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -184,7 +160,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				DE4BCB62161638D4003F4A66 /* GameThriveExample */,
+				DE4BCB62161638D4003F4A66 /* GameThriveExample3 */,
 			);
 		};
 /* End PBXProject section */
@@ -243,7 +219,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = (
+					armv7,
+					armv7s,
+					arm64,
+					i386,
+				);
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -253,7 +234,6 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -275,6 +255,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PROVISIONING_PROFILE = "6bec3bb7-5bc1-4fb4-bd3a-3f006ae9172f";
 				SDKROOT = iphoneos;
+				VALID_ARCHS = "armv7 armv7s arm64 i386";
 			};
 			name = Debug;
 		};
@@ -282,7 +263,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = (
+					armv7,
+					armv7s,
+					arm64,
+					i386,
+				);
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -292,7 +278,6 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -308,6 +293,7 @@
 				PROVISIONING_PROFILE = "6bec3bb7-5bc1-4fb4-bd3a-3f006ae9172f";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s arm64 i386";
 			};
 			name = Release;
 		};
@@ -323,7 +309,7 @@
 				INFOPLIST_FILE = "push-notifications/GameThriveExample-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = GameThriveExample;
+				PRODUCT_NAME = GameThriveExample3;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -340,7 +326,7 @@
 				INFOPLIST_FILE = "push-notifications/GameThriveExample-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = GameThriveExample;
+				PRODUCT_NAME = GameThriveExample3;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -357,7 +343,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		DE4BCB81161638D4003F4A66 /* Build configuration list for PBXNativeTarget "GameThriveExample" */ = {
+		DE4BCB81161638D4003F4A66 /* Build configuration list for PBXNativeTarget "GameThriveExample3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DE4BCB82161638D4003F4A66 /* Debug */,
