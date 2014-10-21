@@ -21,6 +21,7 @@
 #import "GameThrive.h"
 #import "GTHTTPClient.h"
 #import "GTTrackPlayerPurchase.h"
+#import "HGTJailbreakDetection.h"
 
 #import <stdlib.h>
 #import <stdio.h>
@@ -278,11 +279,14 @@ int mNotificationTypes = -1;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010600", @"sdk",
+                             @"010601", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
     mNotificationTypes = getNotificationTypes();
+    
+    if ([HGTJailbreakDetection isJailbroken])
+        dataDic[@"rooted"] = @YES;
     
     if (mNotificationTypes != -1 && isCapableOfGettingNotificationTypes())
         dataDic[@"notification_types"] = [NSNumber numberWithInt:mNotificationTypes];

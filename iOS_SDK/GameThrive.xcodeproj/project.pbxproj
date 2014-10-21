@@ -23,6 +23,7 @@
 
 /* Begin PBXBuildFile section */
 		371FDED919F1A486001479B7 /* GTTrackPlayerPurchase.m in Sources */ = {isa = PBXBuildFile; fileRef = 371FDED819F1A486001479B7 /* GTTrackPlayerPurchase.m */; };
+		3724485819F6D1DE00573B5A /* HGTJailbreakDetection.m in Sources */ = {isa = PBXBuildFile; fileRef = 3724485719F6D1DE00573B5A /* HGTJailbreakDetection.m */; };
 		37284AE71914A43600C5BCF7 /* GameThrive.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 37747FC01914837300558FAD /* GameThrive.h */; };
 		37747FC51914837300558FAD /* GTHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 37747FBD1914837300558FAD /* GTHTTPClient.m */; };
 		37747FC71914837300558FAD /* GameThrive.m in Sources */ = {isa = PBXBuildFile; fileRef = 37747FC11914837300558FAD /* GameThrive.m */; };
@@ -54,6 +55,8 @@
 /* Begin PBXFileReference section */
 		371FDED819F1A486001479B7 /* GTTrackPlayerPurchase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTTrackPlayerPurchase.m; sourceTree = "<group>"; };
 		371FDEDA19F1F9D9001479B7 /* GTTrackPlayerPurchase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTTrackPlayerPurchase.h; sourceTree = "<group>"; };
+		3724485619F61C9E00573B5A /* HGTJailbreakDetection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = HGTJailbreakDetection.h; path = DTTJailbreakDettection/HGTJailbreakDetection.h; sourceTree = "<group>"; };
+		3724485719F6D1DE00573B5A /* HGTJailbreakDetection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HGTJailbreakDetection.m; path = DTTJailbreakDettection/HGTJailbreakDetection.m; sourceTree = "<group>"; };
 		37747F9319147D6500558FAD /* libGameThrive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGameThrive.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		37747FBC1914837300558FAD /* GTHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTHTTPClient.h; sourceTree = "<group>"; };
 		37747FBD1914837300558FAD /* GTHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTHTTPClient.m; sourceTree = "<group>"; };
@@ -75,9 +78,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3724485519F61C3D00573B5A /* DTTJailbreakDetection */ = {
+			isa = PBXGroup;
+			children = (
+				3724485619F61C9E00573B5A /* HGTJailbreakDetection.h */,
+				3724485719F6D1DE00573B5A /* HGTJailbreakDetection.m */,
+			);
+			name = DTTJailbreakDetection;
+			sourceTree = "<group>";
+		};
 		37747F8A19147D6400558FAD = {
 			isa = PBXGroup;
 			children = (
+				3724485519F61C3D00573B5A /* DTTJailbreakDetection */,
 				37747F9819147D6500558FAD /* GameThrive */,
 				37747F9519147D6500558FAD /* Frameworks */,
 				37747F9419147D6500558FAD /* Products */,
@@ -184,6 +197,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				371FDED919F1A486001479B7 /* GTTrackPlayerPurchase.m in Sources */,
+				3724485819F6D1DE00573B5A /* HGTJailbreakDetection.m in Sources */,
 				37747FC51914837300558FAD /* GTHTTPClient.m in Sources */,
 				37747FC71914837300558FAD /* GameThrive.m in Sources */,
 			);
