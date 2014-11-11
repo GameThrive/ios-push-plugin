@@ -24,6 +24,8 @@
 
 @implementation GTTrackPlayerPurchase
 
+// NSClassFromString and performSelector are used so GameThrive does not depend on StoreKit to link the app.
+
 static Class skPaymentQueue;
 NSMutableDictionary* skusToTrack;
 
@@ -80,15 +82,18 @@ NSMutableDictionary* skusToTrack;
     for(id skProduct in [response performSelector:@selector(products)]) {
         NSString* productSku = [skProduct performSelector:@selector(productIdentifier)];
         NSMutableDictionary* purchase = skusToTrack[productSku];
-        purchase[@"sku"] = productSku;
-        purchase[@"amount"] = [skProduct performSelector:@selector(price)];
-        purchase[@"iso"] = [[skProduct performSelector:@selector(priceLocale)] objectForKey:NSLocaleCurrencyCode];
-        if ([purchase[@"count"] intValue] == 1)
-             [purchase removeObjectForKey:@"count"];
-        [arrayOfPruchases addObject:purchase];
+        if (purchase) { // In rare cases this can be nil when there wasn't a connection to Apple when opening the app but there was when buying an IAP item.
+            purchase[@"sku"] = productSku;
+            purchase[@"amount"] = [skProduct performSelector:@selector(price)];
+            purchase[@"iso"] = [[skProduct performSelector:@selector(priceLocale)] objectForKey:NSLocaleCurrencyCode];
+            if ([purchase[@"count"] intValue] == 1)
+                [purchase removeObjectForKey:@"count"];
+            [arrayOfPruchases addObject:purchase];
+        }
     }
     
-    [[GameThrive defaultClient] performSelector:@selector(sendPurchases:) withObject:arrayOfPruchases];
+    if ([arrayOfPruchases count] > 0)
+        [[GameThrive defaultClient] performSelector:@selector(sendPurchases:) withObject:arrayOfPruchases];
 }
 
 

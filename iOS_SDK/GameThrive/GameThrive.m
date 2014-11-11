@@ -209,7 +209,8 @@ int mNotificationTypes = -1;
     }
     
     if ([deviceToken isEqualToString:mDeviceToken]) {
-        successBlock(nil);
+        if (successBlock)
+            successBlock(nil);
         return;
     }
     
@@ -279,7 +280,7 @@ int mNotificationTypes = -1;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010601", @"sdk",
+                             @"010602", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -793,6 +794,8 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
         notification.alertBody = data[@"m"];
         notification.userInfo = userInfo;
         notification.soundName = data[@"s"];
+        if (notification.soundName == nil)
+            notification.soundName = UILocalNotificationDefaultSoundName;
         if (data[@"b"])
             notification.applicationIconBadgeNumber = [data[@"b"] intValue];
         
