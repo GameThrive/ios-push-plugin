@@ -280,7 +280,7 @@ int mNotificationTypes = -1;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010602", @"sdk",
+                             @"010604", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -701,6 +701,23 @@ int getNotificationTypes() {
 @end
 
 
+
+
+static Class getClassWithProtocolInHierarchy(Class searchClass, Protocol* protocolToFind) {
+    if (!class_conformsToProtocol(searchClass, protocolToFind)) {
+        if ([searchClass superclass] == [NSObject class])
+            return nil;
+        
+        Class foundClass = getClassWithProtocolInHierarchy([searchClass superclass], protocolToFind);
+        if (foundClass)
+            return foundClass;
+        
+        return searchClass;
+    }
+    
+    return searchClass;
+}
+
 static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL makeLikeSel) {
     Method newMeth = class_getInstanceMethod(newClass, newSel);
     IMP imp = method_getImplementation(newMeth);
@@ -716,6 +733,7 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
         method_exchangeImplementations(orgMeth, newMeth);
     }
 }
+
 
 
 @implementation UIApplication(GameThrivePush)
@@ -866,11 +884,11 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
         [self gameThriveApplicationDidBecomeActive:application];
 }
 
+
+
 + (void)load {
     method_exchangeImplementations(class_getInstanceMethod(self, @selector(setDelegate:)), class_getInstanceMethod(self, @selector(setGameThriveDelegate:)));
 }
-
-
 
 static Class delegateClass = nil;
 
@@ -879,7 +897,8 @@ static Class delegateClass = nil;
 	if(delegateClass != nil)
 		return;
     
-	delegateClass = [delegate class];
+	delegateClass = getClassWithProtocolInHierarchy([delegate class], @protocol(UIApplicationDelegate));
+    
     
     injectSelector(self.class, @selector(gameThriveReceivedRemoteNotification:userInfo:),
                    delegateClass, @selector(application:didReceiveRemoteNotification:));

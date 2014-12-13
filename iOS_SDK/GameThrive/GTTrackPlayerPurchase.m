@@ -1,9 +1,6 @@
 /**
  * Copyright 2014 GameThrive
  *
- * This file includes portions from the StackMob iOS SDK and distributed under an Apache 2.0 license.
- * StackMob was acquired by PayPal and ceased operation on May 22, 2014.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,7 +70,7 @@ NSMutableDictionary* skusToTrack;
     id productsRequest = [[SKProductsRequestClass alloc]
                             performSelector:@selector(initWithProductIdentifiers:) withObject:[NSSet setWithArray:productIdentifiers]];
     [productsRequest setDelegate:self];
-    [productsRequest start];
+    [productsRequest performSelector:NSSelectorFromString(@"start")];
 }
 
 - (void)productsRequest:(id)request didReceiveResponse:(id)response {
