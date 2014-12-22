@@ -74,6 +74,8 @@ GTTrackPlayerPurchase* trackPlayerPurchase;
 bool registeredWithApple = false; // Has attempted to register for push notifications with Apple.
 bool gameThriveReg = false;
 NSNumber* lastTrackedTime;
+NSNumber* unSentActiveTime;
+NSNumber* timeToPingWith;
 int mNotificationTypes = -1;
 
 - (id)initWithLaunchOptions:(NSDictionary*)launchOptions {
@@ -96,7 +98,10 @@ int mNotificationTypes = -1;
     self = [super init];
     
     if (self) {
+        
         handleNotification = callback;
+        unSentActiveTime = [NSNumber numberWithInteger:-1];
+
         lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
         
         if (appId)
@@ -280,7 +285,7 @@ int mNotificationTypes = -1;
                              [NSNumber numberWithInt:0], @"device_type",
                              [[[UIDevice currentDevice] identifierForVendor] UUIDString], @"ad_id",
                              [self getSoundFiles], @"sounds",
-                             @"010604", @"sdk",
+                             @"010605", @"sdk",
                              mDeviceToken, @"identifier", // identifier MUST be at the end as it could be nil.
                              nil];
     
@@ -469,6 +474,21 @@ NSString* getUsableDeviceToken() {
         [self sendNotificationTypesUpdateIsConfirmed:false];
         wasBadgeSet = clearBadgeCount();
     }
+    else {
+        NSNumber* timeElapsed = @(([[NSDate date] timeIntervalSince1970] - [lastTrackedTime longLongValue]) + 0.5);
+        if ([timeElapsed intValue] < 0 || [timeElapsed intValue] > 604800)
+            return;
+        
+        NSNumber* unSentActiveTime = [self getUnsentActiveTime];
+        NSNumber* totalTimeActive = @([unSentActiveTime intValue] + [timeElapsed intValue]);
+        
+        if ([totalTimeActive intValue] < 30) {
+            [self saveUnsentActiveTime:totalTimeActive];
+            return;
+        }
+        
+        timeToPingWith = totalTimeActive;
+    }
     
     if (mPlayerId == nil)
         return;
@@ -491,18 +511,17 @@ NSString* getUsableDeviceToken() {
     
     // Update the playtime on the server when the app put into the background or the device goes to sleep mode.
     if ([state isEqualToString:@"suspend"]) {
+        [self saveUnsentActiveTime:0];
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             [self beginBackgroundFocusTask];
         
-            NSNumber* timeElapsed = @(([[NSDate date] timeIntervalSince1970] - [lastTrackedTime longLongValue]) + 0.5);
-            timeElapsed = [NSNumber numberWithLongLong: [timeElapsed longLongValue]];
-            lastTrackedTime = [NSNumber numberWithLongLong:[[NSDate date] timeIntervalSince1970]];
+            
             
             NSMutableURLRequest* request = [self.httpClient requestWithMethod:@"POST" path:[NSString stringWithFormat:@"players/%@/on_focus", mPlayerId]];
             NSDictionary* dataDic = [NSDictionary dictionaryWithObjectsAndKeys:
                                      self.app_id, @"app_id",
                                      @"ping", @"state",
-                                     timeElapsed, @"active_time",
+                                     timeToPingWith, @"active_time",
                                      nil];
             
             NSData* postData = [NSJSONSerialization dataWithJSONObject:dataDic options:0 error:nil];
@@ -516,6 +535,25 @@ NSString* getUsableDeviceToken() {
             [self endBackgroundFocusTask];
         });
     }
+}
+
+- (NSNumber*)getUnsentActiveTime {
+    if ([unSentActiveTime intValue] == -1) {
+        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+        unSentActiveTime = [defaults objectForKey:@"GT_UNSENT_ACTIVE_TIME"];
+        if (unSentActiveTime == nil)
+            unSentActiveTime = 0;
+    }
+    
+    return unSentActiveTime;
+}
+
+- (void)saveUnsentActiveTime:(NSNumber*)time {
+    unSentActiveTime = time;
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:time forKey:@"GT_UNSENT_ACTIVE_TIME"];
+    [defaults synchronize];
+
 }
 
 - (void)sendPurchases:(NSArray*)purchases {
