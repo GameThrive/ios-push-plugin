@@ -73,6 +73,7 @@ GTTrackPlayerPurchase* trackPlayerPurchase;
 
 bool registeredWithApple = false; // Has attempted to register for push notifications with Apple.
 bool gameThriveReg = false;
+bool waitingForGtReg = false;
 NSNumber* lastTrackedTime;
 NSNumber* unSentActiveTime;
 NSNumber* timeToPingWith;
@@ -186,9 +187,7 @@ int mNotificationTypes = -1;
 }
 
 - (void)registerDeviceToken:(id)inDeviceToken onSuccess:(GTResultSuccessBlock)successBlock onFailure:(GTFailureBlock)failureBlock {
-    NSString* deviceToken = [[inDeviceToken description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
-    
-    [self updateDeviceToken:[[deviceToken componentsSeparatedByString:@" "] componentsJoinedByString:@""] onSuccess:successBlock onFailure:failureBlock];
+    [self updateDeviceToken:inDeviceToken onSuccess:successBlock onFailure:failureBlock];
     
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:mDeviceToken forKey:@"GT_DEVICE_TOKEN"];
@@ -203,8 +202,9 @@ int mNotificationTypes = -1;
         tokenUpdateFailureBlock = failureBlock;
         
         // iOS 8 - We get a token right away but give the user 30 sec to responsed to the system prompt.
+        // Also check mNotificationTypes so there is no waiting if user has already answered the system prompt.
         // The goal is to only have 1 server call.
-        if (isCapableOfGettingNotificationTypes()) {
+        if (isCapableOfGettingNotificationTypes() && mNotificationTypes == -1) {
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(registerPlayer) object:nil];
             [self performSelector:@selector(registerPlayer) withObject:nil afterDelay:30.0f];
         }
@@ -261,10 +261,10 @@ int mNotificationTypes = -1;
 
 - (void)registerPlayer {
     // Make sure we only call create or on_session once per run of the app.
-    if (gameThriveReg)
+    if (gameThriveReg || waitingForGtReg)
         return;
     
-    gameThriveReg = true;
+    waitingForGtReg = true;
     
     NSMutableURLRequest* request;
     if (mPlayerId == nil)
@@ -301,6 +301,8 @@ int mNotificationTypes = -1;
     [request setHTTPBody:postData];
     
     [self enqueueRequest:request onSuccess:^(NSDictionary* results) {
+        gameThriveReg = true;
+        waitingForGtReg = false;
         if ([results objectForKey:@"id"] != nil) {
             NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
             mPlayerId = [results objectForKey:@"id"];
@@ -322,6 +324,8 @@ int mNotificationTypes = -1;
             }
         }
     } onFailure:^(NSError* error) {
+        gameThriveReg = false;
+        waitingForGtReg = false;
         NSLog(@"Error registering with GameThrive: %@", error);
     }];
 }
@@ -645,12 +649,13 @@ int getNotificationTypes() {
     return -1;
 }
 
+// iOS 8.0+ only
 - (void) updateNotificationTypes:(int)notificationTypes {
     BOOL changed = (mNotificationTypes != notificationTypes);
     
     mNotificationTypes = notificationTypes;
     
-    if (mPlayerId == nil)
+    if (mPlayerId == nil && mDeviceToken)
         [self registerPlayer];
     else if (mDeviceToken)
         [self sendNotificationTypesUpdateIsConfirmed:changed];
@@ -776,16 +781,18 @@ static void injectSelector(Class newClass, SEL newSel, Class addToClass, SEL mak
 
 @implementation UIApplication(GameThrivePush)
 
-- (void)gameThriveDidRegisterForRemoteNotifications:(UIApplication*)app deviceToken:(NSData*)deviceToken {
-    NSLog(@"Device Registered with Apple.");
-    [[GameThrive defaultClient] registerDeviceToken:deviceToken onSuccess:^(NSDictionary* results) {
-        NSLog(@"Device Registered with GameThrive.");
+- (void)gameThriveDidRegisterForRemoteNotifications:(UIApplication*)app deviceToken:(NSData*)inDeviceToken {
+    NSString* trimmedDeviceToken = [[inDeviceToken description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
+    NSString* parsedDeviceToken = [[trimmedDeviceToken componentsSeparatedByString:@" "] componentsJoinedByString:@""];
+    NSLog(@"Device Registered with Apple: %@", parsedDeviceToken);
+    [[GameThrive defaultClient] registerDeviceToken:parsedDeviceToken onSuccess:^(NSDictionary* results) {
+        NSLog(@"Device Registered with GameThrive: %@", mPlayerId);
     } onFailure:^(NSError* error) {
         NSLog(@"Error in GameThrive Registration: %@", error);
     }];
     
     if ([self respondsToSelector:@selector(gameThriveDidRegisterForRemoteNotifications:deviceToken:)])
-        [self gameThriveDidRegisterForRemoteNotifications:app deviceToken:deviceToken];
+        [self gameThriveDidRegisterForRemoteNotifications:app deviceToken:inDeviceToken];
 }
 
 - (void)gameThriveDidFailRegisterForRemoteNotification:(UIApplication*)app error:(NSError*)err {

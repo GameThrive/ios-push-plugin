@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "GameThrivePushNotifications"
-  s.version          = "1.6.5"
+  s.version          = "1.6.6"
   s.summary          = "GameThrive push notification library for mobile games."
   s.homepage         = "https://gamethrive.com"
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
