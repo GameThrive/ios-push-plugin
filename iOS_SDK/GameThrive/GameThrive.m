@@ -748,7 +748,7 @@ int getNotificationTypes() {
 
 static Class getClassWithProtocolInHierarchy(Class searchClass, Protocol* protocolToFind) {
     if (!class_conformsToProtocol(searchClass, protocolToFind)) {
-        if ([searchClass superclass] == [NSObject class])
+        if (([searchClass superclass] == [NSObject class]) || ([searchClass superclass] == nil))
             return nil;
         
         Class foundClass = getClassWithProtocolInHierarchy([searchClass superclass], protocolToFind);
