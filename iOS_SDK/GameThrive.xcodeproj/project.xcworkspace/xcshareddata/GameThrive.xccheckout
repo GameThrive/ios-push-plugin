@@ -14,7 +14,7 @@
 		<string>https://github.com/Hiptic/GameThrive</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>SDK/iOS/iOS_SDK/GameThrive.xcodeproj/project.xcworkspace</string>
+	<string>SDK/iOS/iOS_SDK/GameThrive.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>5A4AFF41A71B5F8D4741699EC46766398BC4FE44</key>

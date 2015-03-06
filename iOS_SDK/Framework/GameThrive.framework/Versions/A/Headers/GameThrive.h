@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-// GameThrive SDK v1.6.6
+// GameThrive SDK
 
 #import <Foundation/Foundation.h>
 #import <objc/runtime.h>
@@ -29,7 +29,7 @@ typedef void (^GTIdsAvailableBlock)(NSString* playerId, NSString* pushToken);
 typedef void (^GTHandleNotificationBlock)(NSString* message, NSDictionary* additionalData, BOOL isActive);
 
 /**
- `GameThrive` provides a high level interface to interacting with GameThrive's push service.
+ `GameThrive` provides a high level interface to interact with GameThrive's push service.
  
  `GameThrive` exposes a defaultClient for applications which use a globally available client to share configuration settings.
  
@@ -43,6 +43,8 @@ typedef void (^GTHandleNotificationBlock)(NSString* message, NSDictionary* addit
 @interface GameThrive : NSObject
 
 @property(nonatomic, readonly, copy) NSString* app_id;
+
+extern NSString* const GT_VERSION;
 
 ///--------------------
 /// @name Initialize

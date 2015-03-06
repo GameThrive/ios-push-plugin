@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37668EEB1AA810740095D813 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37668EEA1AA810740095D813 /* SystemConfiguration.framework */; };
 		376B059419D20E8800C18537 /* GameThrive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 376B059319D20E8800C18537 /* GameThrive.framework */; };
 		37869A001919CAAF00C3E7DA /* 57.png in Resources */ = {isa = PBXBuildFile; fileRef = 378699FD1919CAAF00C3E7DA /* 57.png */; };
 		37869A011919CAAF00C3E7DA /* 114.png in Resources */ = {isa = PBXBuildFile; fileRef = 378699FE1919CAAF00C3E7DA /* 114.png */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		37668EEA1AA810740095D813 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		376B059319D20E8800C18537 /* GameThrive.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameThrive.framework; path = ../iOS_SDK/Framework/GameThrive.framework; sourceTree = "<group>"; };
 		378699FD1919CAAF00C3E7DA /* 57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 57.png; sourceTree = "<group>"; };
 		378699FE1919CAAF00C3E7DA /* 114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 114.png; sourceTree = "<group>"; };
@@ -46,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				37668EEB1AA810740095D813 /* SystemConfiguration.framework in Frameworks */,
 				37F9CA1D19D9CBAD0084DB7F /* UIKit.framework in Frameworks */,
 				376B059419D20E8800C18537 /* GameThrive.framework in Frameworks */,
 			);
@@ -78,6 +81,7 @@
 		DE4BCB66161638D4003F4A66 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				37668EEA1AA810740095D813 /* SystemConfiguration.framework */,
 				37F9CA1C19D9CBAD0084DB7F /* UIKit.framework */,
 				376B059319D20E8800C18537 /* GameThrive.framework */,
 			);
